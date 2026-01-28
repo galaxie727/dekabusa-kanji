@@ -1,685 +1,493 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ja">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>デカブサ漢字クロス（総合・開発用）</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>十字漢字クロス（試作）</title>
+  <style>
+    :root{
+      --bg:#f7f7f7;
+      --card:#fff;
+      --line:#e6e6e6;
+      --text:#111;
+      --muted:#8a8a8a;
+      --accent:#ffd400;
 
-<style>
-  :root{
-    --bg:#f2f2f2;
-    --panel:#ffffff;
-    --text:#111;
-    --muted:#9a9a9a;  /* 「上+□」系の薄グレー */
-    --line:#d8d8d8;
-    --btn:#e0e0e0;
-    --btnActive:#9b9b9b;
-    --danger:#d33;
-  }
+      --footer-h: 112px;     /* 入力+判定を置くので少し増やす */
+      --deka-w: 210px;
+      --deka-gap: 14px;
+      --main-top: 14px;
 
-  body{
-    margin:0;
-    background:var(--bg);
-    color:var(--text);
-    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
-    text-align:center;
-  }
+      /* ★ 5マス統一サイズ（ここだけ触れば一括で変わる） */
+      --cell: 96px;
+      --radius: 14px;
 
-  /* 画面：フッター固定のため padding-bottom を確保 */
-  .screen{
-    max-width:420px;
-    margin:0 auto;
-    min-height:100svh;
-    padding:12px 12px 130px; /* ←フッター分 */
-    box-sizing:border-box;
-  }
+      /* “上＋□”と同じ見た目の矢印（間に出す） */
+      --hint-size: 14px;
+      --hint-color: #b5b5b5;
+    }
 
-  .topbar{
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    gap:10px;
-    margin-bottom:10px;
-  }
-  .title{
-    font-size:14px;
-    color:#777;
-    text-align:left;
-  }
-  .smallbtn{
-    border:none;
-    background:var(--btn);
-    padding:10px 12px;
-    border-radius:12px;
-    font-size:12px;
-    font-weight:700;
-    color:#2a7bd6;
-  }
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
+      font-family: system-ui, -apple-system, "Hiragino Kaku Gothic ProN","Noto Sans JP","Yu Gothic", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
 
-  .panel{
-    background:var(--panel);
-    border:1px solid var(--line);
-    border-radius:18px;
-  }
+    .wrap{
+      min-height: 100svh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding: 18px;
+    }
 
-  /* 上のステータス（問題/ミス/最高） */
-  .statusTop{
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    font-size:13px;
-    color:#888;
-    padding:14px 16px 0;
-    user-select:none;
-  }
+    .card{
+      width: min(560px, 100%);
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      overflow:hidden;
+      position: relative;
+    }
 
-  /* 十字エリア */
-  .crossPanel{
-    padding:14px 10px 18px;
-  }
+    header{
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--line);
+      display:flex;
+      align-items:center;
+      justify-content: space-between;
+      gap:10px;
+    }
 
-  .crossArea{
-    position:relative;
-    width:100%;
-    height:520px; /* ここで全体の収まり決まる */
-    max-height:56svh;
-    margin:0 auto;
-  }
+    .headLeft{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      min-width:0;
+    }
 
-  /* タイル（安/決/配/中） */
-  .tile{
-    position:absolute;
-    width:150px;
-    height:150px;
-    border-radius:22px;
-    border:3px solid #e6e6e6;
-    background:#fff;
-    box-sizing:border-box;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    font-size:66px;
-    font-weight:900;
-    line-height:1;
-  }
+    .dot{
+      width:10px;height:10px;border-radius:50%;
+      background: var(--accent);
+      flex:0 0 auto;
+    }
 
-  /* 真ん中の入力マス */
-  .centerBox{
-    position:absolute;
-    width:150px;
-    height:150px;
-    border-radius:22px;
-    border:3px dashed #cfcfcf;
-    background:#fff;
-    box-sizing:border-box;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-  }
-  .centerBox input{
-    width:100%;
-    height:100%;
-    border:none;
-    outline:none;
-    background:transparent;
-    text-align:center;
-    font-size:66px;
-    font-weight:900;
-    padding:0 10px;
-    box-sizing:border-box;
-  }
+    h1{
+      margin:0;
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: .08em;
+      color: #666;
+      white-space: nowrap;
+    }
 
-  /* タイル内矢印（上+□ と同じ系統） */
-  .arrowInTile{
-    position:absolute;
-    left:50%;
-    top:50%;
-    transform:translate(-50%,-50%);
-    font-size:14px;
-    font-weight:800;
-    color:var(--muted);
-    line-height:1;
-    user-select:none;
-    pointer-events:none;
-  }
+    #status{
+      font-size: 12px;
+      color: #9a9a9a;
+      letter-spacing: .08em;
+      white-space: nowrap;
+    }
 
-  /* レイアウト配置（十字） */
-  .tile.top    { left:50%; top:0;    transform:translateX(-50%); }
-  .tile.left   { left:0;   top:50%;  transform:translateY(-50%); }
-  .tile.right  { right:0;  top:50%;  transform:translateY(-50%); }
-  .tile.bottom { left:50%; bottom:0; transform:translateX(-50%); }
+    main{
+      padding: var(--main-top) 16px calc(var(--footer-h) + 16px);
+      min-height: 420px;
+      position: relative;
+    }
 
-  .centerBox   { left:50%; top:50%; transform:translate(-50%,-50%); }
+    .topInfo{
+      margin: 0 0 10px;
+      text-align:center;
+      color: var(--muted);
+      font-size: 12px;
+      letter-spacing: .08em;
+      user-select:none;
+    }
 
-  /* キャラエリア（下） */
-  .charPanel{
-    margin-top:12px;
-    padding:14px 14px 18px;
-  }
-  .charRow{
-    display:flex;
-    justify-content:space-between;
-    align-items:flex-end;
-    gap:10px;
-  }
-  .charMessage{
-    flex:1;
-    text-align:left;
-    font-size:26px;
-    font-weight:900;
-    letter-spacing:0.01em;
-    padding:6px 0 0;
-    line-height:1.1;
-  }
-  .charImgWrap{
-    width:130px;
-    height:110px;
-    display:flex;
-    align-items:flex-end;
-    justify-content:center;
-    overflow:hidden;
-  }
-  .charImgWrap img{
-    max-width:100%;
-    max-height:100%;
-    object-fit:contain;
-    display:block;
-  }
+    /* 十字グリッド（矢印を“間”に置くのでgapは少し詰める） */
+    .crossWrap{
+      display:flex;
+      justify-content:center;
+      margin-top: 6px;
+    }
 
-  /* フッター固定（入力ボタン＆判定） */
-  .footer{
-    position:fixed;
-    left:0;
-    right:0;
-    bottom:0;
-    background:rgba(242,242,242,0.92);
-    backdrop-filter: blur(6px);
-    border-top:1px solid #ddd;
-    padding:12px 12px 14px;
-    box-sizing:border-box;
-  }
-  .footerInner{
-    max-width:420px;
-    margin:0 auto;
-    display:flex;
-    gap:10px;
-  }
-  .miniInputBtn{
-    flex:1;
-    border:2px solid #e1e1e1;
-    background:#fff;
-    border-radius:18px;
-    padding:16px 0;
-    font-size:18px;
-    font-weight:900;
-    color:#999;
-  }
-  .judgeBtn{
-    flex:1;
-    border:none;
-    background:#cfcfcf;
-    border-radius:18px;
-    padding:16px 0;
-    font-size:18px;
-    font-weight:900;
-    color:#333;
-  }
-  .judgeBtn:active{ filter:brightness(0.95); }
+    .cross{
+      width: min(360px, 100%);
+      display:grid;
+      grid-template-columns: var(--cell) 26px var(--cell) 26px var(--cell);
+      grid-template-rows:    var(--cell) 22px var(--cell) 22px var(--cell);
+      align-items:center;
+      justify-content:center;
+      padding: 10px 8px;
+    }
 
-  /* トースト */
-  .toast{
-    position:fixed;
-    left:50%;
-    top:16px;
-    transform:translateX(-50%);
-    background:#111;
-    color:#fff;
-    padding:10px 14px;
-    border-radius:14px;
-    font-size:14px;
-    font-weight:900;
-    opacity:0;
-    pointer-events:none;
-    transition:opacity .18s ease;
-    z-index:50;
-  }
-  .toast.show{ opacity:0.92; }
-  .toast.bad{ background:var(--danger); }
+    .cell{
+      width: var(--cell);
+      height: var(--cell);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background: #fafafa;
+      position: relative;
+      user-select:none;
+    }
 
-  /* ===== キャラ紹介オーバーレイ ===== */
-  .overlay{
-    position:fixed;
-    inset:0;
-    background:rgba(0,0,0,0.35);
-    display:none;
-    align-items:center;
-    justify-content:center;
-    padding:16px;
-    box-sizing:border-box;
-    z-index:60;
-  }
-  .overlay.show{ display:flex; }
+    .cell .kanji{
+      font-size: 40px;
+      font-weight: 700;
+      letter-spacing: .04em;
+      line-height: 1;
+    }
 
-  .sheet{
-    width:min(420px, 100%);
-    background:var(--panel);
-    border-radius:18px;
-    border:1px solid var(--line);
-    overflow:hidden;
-  }
-  .sheetHeader{
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    padding:12px 12px;
-    border-bottom:1px solid var(--line);
-  }
-  .sheetHeader .h{
-    font-size:13px;
-    color:#777;
-    font-weight:800;
-  }
-  .closeBtn{
-    border:none;
-    background:var(--btn);
-    padding:10px 12px;
-    border-radius:12px;
-    font-size:12px;
-    font-weight:900;
-    color:#2a7bd6;
-  }
+    /* 中央（空欄） */
+    .cell.center{
+      background: #fff;
+      border-style: dashed;
+      border-width: 2px;
+      border-color: #cfcfcf;
+    }
+    .cell.center .kanji{
+      color:#bbb;
+      font-weight: 600;
+      font-size: 36px;
+    }
 
-  .profileArea{ padding:14px 14px 10px; }
-  .profileCard{
-    border:1px solid var(--line);
-    border-radius:14px;
-    padding:12px;
-  }
-  .profileTop{
-    display:flex;
-    gap:12px;
-    align-items:center;
-  }
-  .avatarImg{
-    width:92px;
-    height:92px;
-    border-radius:14px;
-    background:#fff;
-    border:1px solid var(--line);
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    overflow:hidden;
-  }
-  .avatarImg img{
-    max-width:100%;
-    max-height:100%;
-    object-fit:contain;
-    display:block;
-  }
-  .profileText{ text-align:left; flex:1; }
-  .name{ font-size:18px; font-weight:900; margin-bottom:4px; }
-  .ability{ font-size:13px; color:#888; margin-bottom:8px; font-weight:800; }
-  .desc{ font-size:13px; line-height:1.5; color:#222; }
-  .quote{
-    margin-top:10px;
-    padding-top:10px;
-    border-top:1px dashed var(--line);
-    font-size:13px;
-    color:#222;
-    font-weight:800;
-  }
+    /* ★“間”に出す矢印（上＋□と同じ見た目） */
+    .midHint{
+      font-size: var(--hint-size);
+      color: var(--hint-color);
+      letter-spacing: .02em;
+      user-select:none;
+      text-align:center;
+      line-height: 1;
+    }
 
-  .navRow{
-    display:flex;
-    gap:8px;
-    padding:10px 14px 14px;
-  }
-  .navRow button{
-    flex:1;
-    border:none;
-    background:var(--btn);
-    padding:12px 0;
-    border-radius:12px;
-    font-size:12px;
-    font-weight:900;
-    color:#2a7bd6;
-  }
-  .pager{
-    padding:0 14px 14px;
-    font-size:12px;
-    color:#888;
-    user-select:none;
-    font-weight:800;
-  }
+    /* 入力+判定をフッター固定 */
+    footer{
+      position: sticky;
+      bottom: 0;
+      border-top: 1px solid var(--line);
+      height: var(--footer-h);
+      background: #fff;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      padding: 12px 12px;
+      gap: 10px;
+    }
 
-  .note{
-    padding:12px 14px 14px;
-    border-top:1px solid var(--line);
-    font-size:12px;
-    color:#888;
-    line-height:1.5;
-    text-align:left;
-    font-weight:700;
-  }
-</style>
+    .footerInner{
+      width: min(360px, 100%);
+      display:flex;
+      gap:10px;
+      align-items:center;
+      justify-content:center;
+    }
+
+    input{
+      flex: 0 0 140px;
+      height: 56px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      font-size: 28px;
+      text-align:center;
+      outline: none;
+      background:#fff;
+    }
+
+    button{
+      flex: 1;
+      height: 56px;
+      border: 1px solid var(--line);
+      background: #fafafa;
+      color:#111;
+      border-radius: 14px;
+      font-size: 16px;
+      padding: 0 18px;
+      cursor:pointer;
+      font-weight: 700;
+    }
+    button:active{ transform: translateY(1px); background:#f2f2f2; }
+
+    #msg{
+      position:absolute;
+      left: 16px;
+      right: 16px;
+      bottom: calc(var(--footer-h) + 10px);
+      margin: 0;
+      min-height: 1.6em;
+      font-size: 14px;
+      color: #9a9a9a;
+      letter-spacing: .06em;
+      user-select:none;
+      text-align:left;
+    }
+
+    /* デカブサ：右下固定（フッターのすぐ上） */
+    .dekabusa{
+      position:absolute;
+      right: var(--deka-gap);
+      bottom: var(--footer-h);
+      width: var(--deka-w);
+      height:auto;
+      pointer-events:none;
+      user-select:none;
+      opacity: .98;
+    }
+
+    /* GAME OVER オーバーレイ */
+    .overlay{
+      position:absolute;
+      inset:0;
+      background: rgba(255,255,255,.92);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      text-align:center;
+      padding: 18px;
+    }
+    .overlay.show{ display:flex; }
+
+    .overBox{
+      width: min(420px, 100%);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background:#fff;
+      padding: 18px 16px;
+    }
+    .overTitle{
+      font-size: 20px;
+      font-weight: 800;
+      margin: 0 0 10px;
+      letter-spacing: .06em;
+    }
+    .overText{
+      margin: 0 0 14px;
+      color:#777;
+      white-space: pre-line;
+      line-height: 1.6;
+      letter-spacing: .06em;
+    }
+
+    @media (max-width: 420px){
+      :root{
+        --deka-w: 180px;
+        --footer-h: 106px;
+        --cell: 88px;      /* iPhoneでスクロール出にくい安全値 */
+      }
+      main{ min-height: 380px; }
+      .cell .kanji{ font-size: 36px; }
+      .cell.center .kanji{ font-size: 34px; }
+      input{ flex-basis: 130px; }
+    }
+  </style>
 </head>
-
 <body>
+  <div class="wrap">
+    <div class="card" id="card">
+      <header>
+        <div class="headLeft">
+          <div class="dot"></div>
+          <h1>十字漢字クロス</h1>
+        </div>
+        <div id="status">余裕：3</div>
+      </header>
 
-<div class="toast" id="toast"></div>
+      <main>
+        <p class="topInfo" id="qno">問題 1 / 10</p>
 
-<div class="screen">
-  <div class="topbar">
-    <div class="title">デカブサ漢字クロス（総合・開発用）</div>
-    <button class="smallbtn" id="openIntroBtn">キャラ紹介</button>
-  </div>
+        <div class="crossWrap">
+          <div class="cross" aria-label="十字漢字パズル">
+            <!-- Grid 5x5：cellとcellの“間”にヒント矢印を置く -->
 
-  <div class="panel crossPanel">
-    <div class="statusTop">
-      <div id="qLabel">問題 1 / ∞（テスト）</div>
-      <div><span id="missLabel">ミス 0 / 3</span>　|　<span id="bestLabel">最高 0</span></div>
-    </div>
+            <!-- row1: [ ] [ ] [Top] [ ] [ ] -->
+            <div></div><div></div>
+            <div class="cell" id="topCell"><div class="kanji" id="topK">?</div></div>
+            <div></div><div></div>
 
-    <div class="crossArea" aria-label="十字クロス">
-      <!-- 上 -->
-      <div class="tile top">
-        安
-        <span class="arrowInTile">↓</span>
-      </div>
+            <!-- row2: [ ] [ ] [↓] [ ] [ ] -->
+            <div></div><div></div>
+            <div class="midHint">↓</div>
+            <div></div><div></div>
 
-      <!-- 左 -->
-      <div class="tile left">
-        決
-        <span class="arrowInTile">→</span>
-      </div>
+            <!-- row3: [Left] [→] [Center] [→] [Right] -->
+            <div class="cell" id="leftCell"><div class="kanji" id="leftK">?</div></div>
+            <div class="midHint">→</div>
+            <div class="cell center" id="centerCell"><div class="kanji">□</div></div>
+            <div class="midHint">→</div>
+            <div class="cell" id="rightCell"><div class="kanji" id="rightK">?</div></div>
 
-      <!-- 右 -->
-      <div class="tile right">
-        配
-        <span class="arrowInTile">←</span>
-      </div>
+            <!-- row4: [ ] [ ] [↓] [ ] [ ] -->
+            <div></div><div></div>
+            <div class="midHint">↓</div>
+            <div></div><div></div>
 
-      <!-- 下 -->
-      <div class="tile bottom">
-        中
-        <span class="arrowInTile">↑</span>
-      </div>
-
-      <!-- 中央入力 -->
-      <div class="centerBox">
-        <input id="answerInput" type="text" inputmode="text" autocomplete="off"
-          autocorrect="off" autocapitalize="off" spellcheck="false" />
-      </div>
-    </div>
-  </div>
-
-  <div class="panel charPanel">
-    <div class="charRow">
-      <div class="charMessage" id="message">……この未来だった</div>
-      <div class="charImgWrap">
-        <img id="mainCharImg" src="img/gori.png" alt="character">
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- フッター固定：入力（フォーカス）＆判定 -->
-<div class="footer">
-  <div class="footerInner">
-    <button class="miniInputBtn" id="focusBtn">一字</button>
-    <button class="judgeBtn" id="judgeBtn">判定</button>
-  </div>
-</div>
-
-<!-- キャラ紹介 -->
-<div class="overlay" id="introOverlay" aria-hidden="true">
-  <div class="sheet" role="dialog" aria-modal="true">
-    <div class="sheetHeader">
-      <div class="h">キャラ紹介（選ぶだけ）</div>
-      <button class="closeBtn" id="closeIntroBtn">閉じる</button>
-    </div>
-
-    <div class="profileArea">
-      <div class="profileCard" id="profileCard">
-        <div class="profileTop">
-          <div class="avatarImg"><img id="introAvatarImg" src="img/dekabusa.png" alt=""></div>
-          <div class="profileText">
-            <div class="name" id="introName">デカブサ</div>
-            <div class="ability" id="introAbility">能力：特になし</div>
-            <div class="desc" id="introDesc">何も教えない。褒めない。怒らない。</div>
+            <!-- row5: [ ] [ ] [Bottom] [ ] [ ] -->
+            <div></div><div></div>
+            <div class="cell" id="bottomCell"><div class="kanji" id="bottomK">?</div></div>
+            <div></div><div></div>
           </div>
         </div>
-        <div class="quote" id="introQuote">代表： 「……」</div>
-      </div>
-    </div>
 
-    <div class="navRow">
-      <button id="prevBtn">←</button>
-      <button id="useBtn">このキャラにする</button>
-      <button id="nextBtn">→</button>
-    </div>
+        <div id="msg"></div>
 
-    <div class="pager" id="pager">1 / 5</div>
+        <!-- Game Over -->
+        <div class="overlay" id="overlay">
+          <div class="overBox">
+            <p class="overTitle">今日はそういう日</p>
+            <p class="overText">また今度</p>
+            <button id="restartBtn" type="button">最初から</button>
+          </div>
+        </div>
+      </main>
 
-    <div class="note">
-      追加キャラは、<b>表示</b>と<b>文言</b>が変わるだけです。<br>
-      やること（漢字1字入れて判定）は変わりません。
+      <footer>
+        <div class="footerInner">
+          <!-- IME対応：maxlength無し。判定時に最後の1文字採用 -->
+          <input id="ans" type="text" inputmode="text"
+                 autocomplete="off" autocapitalize="off" spellcheck="false"
+                 placeholder="一字">
+          <button id="judgeBtn" type="button">判定</button>
+        </div>
+      </footer>
+
+      <img class="dekabusa" src="dekabusa.png" alt="デカブサ">
     </div>
   </div>
-</div>
 
 <script>
-  // ===== キャラ定義 =====
-  const characters = [
-    {
-      id:"dekabusa",
-      name:"デカブサ",
-      img:"img/dekabusa.png",
-      ability:"能力：特になし",
-      desc:"何も教えない。褒めない。怒らない。",
-      quote:"代表： 「……」",
-      message:"一字、入力して"
-    },
-    {
-      id:"gori",
-      name:"ゴリさん",
-      img:"img/gori.png",
-      ability:"能力：タイムリープ",
-      desc:"未来が分かる。けど言わない。変えない。",
-      quote:"代表： 「……この未来だった」",
-      message:"……この未来だった"
-    },
-    {
-      id:"tora",
-      name:"トラさん",
-      img:"img/tora.png",
-      ability:"能力：分身",
-      desc:"分身できる。だからって何もしない。",
-      quote:"代表： 「……」",
-      message:"静かに入力しろ"
-    },
-    {
-      id:"king",
-      name:"キング",
-      img:"img/king.png",
-      ability:"能力：時を止める",
-      desc:"褒めるときは止めて拍手3回。",
-      quote:"代表： 「（止めて拍手）」",
-      message:"王は見ている"
-    },
-    {
-      id:"ani",
-      name:"デカブサ兄",
-      img:"img/ani.png",
-      ability:"能力：加速装置",
-      desc:"速い。けど反応は薄い。空気だけ重い。",
-      quote:"代表： （なし）",
-      message:"……"
-    }
+  // ルール：上＋□ / 左＋□ / □＋右 / □＋下（ヒントなし）
+  // ミスは内部でカウント。3回でGame Over。
+
+  const MISS_LIMIT = 3;
+
+  // ✅ 仮問題10問（成立保証済み）
+  const questions = [
+    { top:"入", left:"大", right:"校", bottom:"生", answer:"学" }, // 入学/大学/学校/学生
+    { top:"先", left:"一", right:"活", bottom:"物", answer:"生" }, // 先生/一生/生活/生物
+    { top:"安", left:"決", right:"配", bottom:"中", answer:"心" }, // 安心/決心/心配/心中
+    { top:"努", left:"能", right:"量", bottom:"士", answer:"力" }, // 努力/能力/力量/力士
+    { top:"集", left:"総", right:"社", bottom:"員", answer:"会" }, // 集会/総会/会社/会員
+    { top:"共", left:"予", right:"謝", bottom:"動", answer:"感" }, // 共感/予感/感謝/感動
+    { top:"変", left:"悪", right:"学", bottom:"粧", answer:"化" }, // 変化/悪化/化学/化粧
+    { top:"真", left:"原", right:"由", bottom:"科", answer:"理" }, // 真理/原理/理由/理科
+    { top:"討", left:"結", right:"文", bottom:"理", answer:"論" }, // 討論/結論/論文/論理
+    { top:"全", left:"中", right:"語", bottom:"民", answer:"国" }  // 全国/中国/国語/国民
   ];
 
-  // ===== ゲーム状態 =====
-  let selectedIndex = 1;     // 初期：ゴリさんにしておく（画像が見える前提）
-  let introIndex = 0;
+  // DOM
+  const qnoEl = document.getElementById("qno");
+  const statusEl = document.getElementById("status");
+  const topK = document.getElementById("topK");
+  const leftK = document.getElementById("leftK");
+  const rightK = document.getElementById("rightK");
+  const bottomK = document.getElementById("bottomK");
+
+  const ansEl = document.getElementById("ans");
+  const judgeBtn = document.getElementById("judgeBtn");
+  const msgEl = document.getElementById("msg");
+
+  const overlay = document.getElementById("overlay");
+  const restartBtn = document.getElementById("restartBtn");
+
+  let idx = 0;
   let miss = 0;
-  let cleared = 0;
-  let best = Number(localStorage.getItem("dekabusa_best") || "0");
 
-  // テスト問題（暫定）
-  const current = { answer: "全" };
-
-  // ===== UI参照 =====
-  const mainCharImg = document.getElementById("mainCharImg");
-  const messageEl  = document.getElementById("message");
-  const inputEl    = document.getElementById("answerInput");
-  const missLabel  = document.getElementById("missLabel");
-  const bestLabel  = document.getElementById("bestLabel");
-  const qLabel     = document.getElementById("qLabel");
-  const toast      = document.getElementById("toast");
-  const judgeBtn   = document.getElementById("judgeBtn");
-  const focusBtn   = document.getElementById("focusBtn");
-
-  // ===== トースト =====
-  let toastTimer = null;
-  function showToast(text, bad=false){
-    toast.textContent = text;
-    toast.classList.toggle("bad", bad);
-    toast.classList.add("show");
-    clearTimeout(toastTimer);
-    toastTimer = setTimeout(()=>toast.classList.remove("show"), 650);
+  function setStatus(){
+    const remain = Math.max(0, MISS_LIMIT - miss);
+    statusEl.innerText = `余裕：${remain}`;
   }
 
-  // ===== ラベル =====
-  function setLabels(){
-    missLabel.textContent = `ミス ${miss} / 3`;
-    bestLabel.textContent = `最高 ${best}`;
-    qLabel.textContent = `問題 ${cleared + 1} / ∞（テスト）`;
+  function render(){
+    const q = questions[idx];
+    qnoEl.innerText = `問題 ${idx + 1} / ${questions.length}`;
+    topK.innerText = q.top;
+    leftK.innerText = q.left;
+    rightK.innerText = q.right;
+    bottomK.innerText = q.bottom;
+
+    ansEl.value = "";
+    msgEl.textContent = "";
+    setStatus();
+
+    // フォーカス（スクロール暴れ防止）
+    setTimeout(() => {
+      try{ ansEl.focus({ preventScroll: true }); }catch(e){ ansEl.focus(); }
+    }, 0);
   }
 
-  // ===== キャラ適用 =====
-  function selectChar(i){
-    selectedIndex = i;
-    const c = characters[i];
-    mainCharImg.src = c.img;
-    mainCharImg.alt = c.name;
-    messageEl.textContent = c.message;
+  function normalizeOneChar(s){
+    // 空白除去（全角スペースも）
+    s = (s || "").replace(/[ \t\n\r\u3000]/g, "");
+    if(!s) return "";
+    // IMEで複数入った場合は最後の1文字だけ採用
+    return s.slice(-1);
   }
 
-  // ===== IME対策：最後の1文字だけ判定に使う =====
-  function getOneCharForJudge(){
-    const raw = (inputEl.value || "").replace(/\s|　/g, "");
-    if(!raw) return "";
-    return raw.slice(-1);
+  function nextQuestion(){
+    idx = (idx + 1) % questions.length;
+    render();
   }
 
   function gameOver(){
-    if(cleared > best){
-      best = cleared;
-      localStorage.setItem("dekabusa_best", String(best));
-    }
-    setLabels();
-    showToast(`ゲームオーバー（最高 ${best}）`, true);
-
-    setTimeout(()=>{
-      alert(`ゲームオーバー\n最高 ${best}\n\n（ここに1コマ漫画を出すの良い）`);
-      miss = 0;
-      cleared = 0;
-      inputEl.value = "";
-      setLabels();
-    }, 250);
+    overlay.classList.add("show");
   }
 
   function judge(){
-    const ch = getOneCharForJudge();
-    if(!ch){
-      showToast("入力しろ", true);
-      return;
-    }
+    if(overlay.classList.contains("show")) return;
 
-    if(ch === current.answer){
-      cleared++;
-      showToast("正解");
-      inputEl.value = "";
-      setLabels();
+    const q = questions[idx];
+    const input = normalizeOneChar(ansEl.value);
+
+    // 入力が空なら無言
+    if(!input) return;
+
+    // 表示上も1文字に丸める
+    ansEl.value = input;
+
+    if(input === q.answer){
+      msgEl.textContent = "……";
     }else{
       miss++;
-      showToast("不正解", true);
-      setLabels();
-      if(miss >= 3) gameOver();
+      msgEl.textContent = "……";
+      setStatus();
+      if(miss >= MISS_LIMIT){
+        gameOver();
+        return;
+      }
     }
+
+    // 正解・不正解どちらでも次へ
+    setTimeout(nextQuestion, 180);
   }
 
   judgeBtn.addEventListener("click", judge);
 
-  // フッターの「一字」＝入力フォーカス
-  focusBtn.addEventListener("click", ()=>{
-    inputEl.focus();
-  });
-
-  // Enter（iOSの完了）で判定
-  inputEl.addEventListener("keydown", (e)=>{
+  // Enterで判定（iOS「完了」対策）
+  ansEl.addEventListener("keydown", (e)=>{
     if(e.key === "Enter"){
       e.preventDefault();
       judge();
     }
   });
 
-  // ===== キャラ紹介（右上ボタンのみ） =====
-  const overlay = document.getElementById("introOverlay");
-  const introAvatarImg = document.getElementById("introAvatarImg");
+  // 入力中は “見た目は自由” にして、判定時にだけ最後の1字を採用
+  // ただし、極端に長い入力は見た目が崩れるので軽く制限
+  ansEl.addEventListener("input", () => {
+    if(ansEl.value.length > 8) ansEl.value = ansEl.value.slice(-8);
+  });
 
-  function openIntro(){
-    introIndex = selectedIndex;
-    renderIntro();
-    overlay.classList.add("show");
-    overlay.setAttribute("aria-hidden","false");
-  }
-  function closeIntro(){
+  restartBtn.addEventListener("click", () => {
     overlay.classList.remove("show");
-    overlay.setAttribute("aria-hidden","true");
-  }
-  function renderIntro(){
-    const c = characters[introIndex];
-    introAvatarImg.src = c.img;
-    document.getElementById("introName").textContent = c.name;
-    document.getElementById("introAbility").textContent = c.ability;
-    document.getElementById("introDesc").textContent = c.desc;
-    document.getElementById("introQuote").textContent = c.quote;
-    document.getElementById("pager").textContent = `${introIndex + 1} / ${characters.length}`;
-  }
-  function introPrev(){ introIndex = (introIndex - 1 + characters.length) % characters.length; renderIntro(); }
-  function introNext(){ introIndex = (introIndex + 1) % characters.length; renderIntro(); }
-  function useThisChar(){ selectChar(introIndex); closeIntro(); }
+    idx = 0;
+    miss = 0;
+    render();
+  });
 
-  document.getElementById("openIntroBtn").addEventListener("click", openIntro);
-  document.getElementById("closeIntroBtn").addEventListener("click", closeIntro);
-  document.getElementById("prevBtn").addEventListener("click", introPrev);
-  document.getElementById("nextBtn").addEventListener("click", introNext);
-  document.getElementById("useBtn").addEventListener("click", useThisChar);
-
-  overlay.addEventListener("click", (e)=>{ if(e.target === overlay) closeIntro(); });
-
-  // スワイプ
-  let sx=0, sy=0, tracking=false;
-  const card = document.getElementById("profileCard");
-  card.addEventListener("touchstart",(e)=>{
-    const t=e.touches[0]; sx=t.clientX; sy=t.clientY; tracking=true;
-  },{passive:true});
-  card.addEventListener("touchend",(e)=>{
-    if(!tracking) return;
-    tracking=false;
-    const t=e.changedTouches[0];
-    const dx=t.clientX-sx, dy=t.clientY-sy;
-    if(Math.abs(dx)>45 && Math.abs(dy)<35){
-      if(dx>0) introPrev(); else introNext();
-    }
-  },{passive:true});
-
-  // 初期化
-  setLabels();
-  selectChar(selectedIndex);
+  render();
 </script>
-
 </body>
 </html>
