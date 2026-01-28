@@ -15,7 +15,11 @@
     --btn:#ddd;
     --btnActive:#999;
     --danger:#d33;
+
+    /* 固定フッターの想定高さ（あとで微調整OK） */
+    --footerH: 172px;
   }
+
   body{
     margin:0;
     background:var(--bg);
@@ -24,12 +28,12 @@
     text-align:center;
   }
 
-  /* できるだけスクロールさせない（端末差で少しだけ出る場合はあり） */
+  /* ===== 画面（下は固定フッター分あける） ===== */
   .screen{
     max-width:420px;
     margin:0 auto;
-    height:100svh;
-    padding:12px 12px 10px;
+    min-height:100svh;             /* height固定しない */
+    padding:12px 12px calc(var(--footerH) + 12px + env(safe-area-inset-bottom));
     box-sizing:border-box;
     display:flex;
     flex-direction:column;
@@ -53,6 +57,7 @@
     padding:10px 12px;
     border-radius:12px;
     font-size:12px;
+    font-weight:800;
   }
 
   .panel{
@@ -61,10 +66,9 @@
     border-radius:16px;
   }
 
-  /* キャラ表示 */
-  .charPanel{
-    padding:10px;
-  }
+  /* ===== キャラ表示 ===== */
+  .charPanel{ padding:10px; }
+
   .charImgWrap{
     height:120px;
     display:flex;
@@ -83,20 +87,18 @@
 
   .message{
     font-size:22px;
-    font-weight:800;
+    font-weight:900;
     letter-spacing:0.02em;
     padding:6px 0 0;
     user-select:none;
   }
 
-  /* 問題（縦横の矢印） */
+  /* ===== 問題（ここが縮んでも破綻しにくいように） ===== */
   .crossWrap{
-    flex:1;
     padding:14px 12px;
     display:flex;
     align-items:center;
     justify-content:center;
-    min-height:0; /* flexのはみ出し防止 */
   }
 
   .cross{
@@ -120,7 +122,7 @@
     line-height:1;
   }
 
-  /* 入力枠（IME対応：ここは「複数文字OK」にする） */
+  /* 入力枠（IME用に“横長”のまま） */
   .boxInput{
     width:150px;
     height:110px;
@@ -140,7 +142,7 @@
     background:transparent;
     text-align:center;
     font-size:56px;
-    font-weight:800;
+    font-weight:900;
     padding:0 10px;
     box-sizing:border-box;
   }
@@ -151,11 +153,29 @@
     justify-content:center;
     gap:10px;
     font-size:40px;
-    font-weight:800;
+    font-weight:900;
     flex-wrap:wrap;
   }
 
-  /* 下部：ステータスと判定 */
+  /* ===== 固定フッター（ステータス＋判定＋キャラバー） ===== */
+  .footer{
+    position:fixed;
+    left:0; right:0; bottom:0;
+    background:var(--bg);
+    border-top:1px solid var(--line);
+    z-index:40;
+    padding:10px 12px calc(10px + env(safe-area-inset-bottom));
+    box-sizing:border-box;
+  }
+
+  .footerInner{
+    max-width:420px;
+    margin:0 auto;
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+  }
+
   .statusRow{
     display:flex;
     justify-content:space-between;
@@ -173,11 +193,10 @@
     border-radius:16px;
     padding:14px 0;
     font-size:18px;
-    font-weight:800;
+    font-weight:900;
   }
   .judgeBtn:active{ filter:brightness(0.95); }
 
-  /* キャラバー */
   .character-bar{
     display:flex;
     gap:8px;
@@ -189,13 +208,14 @@
     border:none;
     border-radius:12px;
     background:var(--btn);
+    font-weight:900;
   }
   .character-bar button.active{
     background:var(--btnActive);
     color:#fff;
   }
 
-  /* 結果トースト（正誤表示） */
+  /* ===== 結果トースト ===== */
   .toast{
     position:fixed;
     left:50%;
@@ -206,11 +226,11 @@
     padding:10px 14px;
     border-radius:14px;
     font-size:14px;
-    font-weight:800;
+    font-weight:900;
     opacity:0;
     pointer-events:none;
     transition:opacity .18s ease;
-    z-index:50;
+    z-index:80;
   }
   .toast.show{ opacity:0.92; }
   .toast.bad{ background:var(--danger); }
@@ -225,7 +245,7 @@
     justify-content:center;
     padding:16px;
     box-sizing:border-box;
-    z-index:60;
+    z-index:90;
   }
   .overlay.show{ display:flex; }
 
@@ -253,6 +273,7 @@
     padding:10px 12px;
     border-radius:12px;
     font-size:12px;
+    font-weight:900;
   }
 
   .profileArea{ padding:14px 14px 10px; }
@@ -307,7 +328,7 @@
     padding:12px 0;
     border-radius:12px;
     font-size:12px;
-    font-weight:800;
+    font-weight:900;
   }
   .pager{
     padding:0 14px 14px;
@@ -337,7 +358,6 @@
 <div class="toast" id="toast"></div>
 
 <div class="screen">
-
   <div class="topbar">
     <div class="title">デカブサ漢字クロス（総合・開発用）</div>
     <button class="smallbtn" id="openIntroBtn">キャラ紹介</button>
@@ -357,8 +377,8 @@
         <div class="arrow">↓</div>
 
         <div class="boxInput">
-          <!-- IME対応：maxlength付けない。判定時に1文字にする -->
-          <input id="answerInput" type="text" inputmode="text" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="">
+          <input id="answerInput" type="text" inputmode="text"
+            autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
         </div>
 
         <div class="arrow">↓</div>
@@ -376,16 +396,20 @@
       </div>
     </div>
   </div>
+</div>
 
-  <div class="statusRow">
-    <div id="qLabel">問題 1 / ∞（テスト）</div>
-    <div><span id="missLabel">ミス 0 / 3</span>　|　<span id="bestLabel">最高 0</span></div>
+<!-- 固定フッター -->
+<div class="footer">
+  <div class="footerInner">
+    <div class="statusRow">
+      <div id="qLabel">問題 1 / ∞（テスト）</div>
+      <div><span id="missLabel">ミス 0 / 3</span>　|　<span id="bestLabel">最高 0</span></div>
+    </div>
+
+    <button class="judgeBtn" id="judgeBtn">判定</button>
+
+    <div class="character-bar" id="charBar"></div>
   </div>
-
-  <button class="judgeBtn" id="judgeBtn">判定</button>
-
-  <div class="character-bar" id="charBar"></div>
-
 </div>
 
 <!-- キャラ紹介オーバーレイ -->
@@ -427,69 +451,22 @@
 </div>
 
 <script>
-  // ===== キャラ定義（画像パスが肝） =====
   const characters = [
-    {
-      id:"dekabusa",
-      name:"デカブサ",
-      img:"img/dekabusa.png",
-      ability:"能力：特になし",
-      desc:"何も教えない。褒めない。怒らない。",
-      quote:"代表： 「……」",
-      message:"一字、入力して"
-    },
-    {
-      id:"gori",
-      name:"ゴリさん",
-      img:"img/gori.png",
-      ability:"能力：タイムリープ",
-      desc:"未来が分かる。けど言わない。変えない。",
-      quote:"代表： 「……この未来だった」",
-      message:"……この未来だった"
-    },
-    {
-      id:"tora",
-      name:"トラさん",
-      img:"img/tora.png",
-      ability:"能力：分身",
-      desc:"分身できる。だからって何もしない。",
-      quote:"代表： 「……」",
-      message:"静かに入力しろ"
-    },
-    {
-      id:"king",
-      name:"キング",
-      img:"img/king.png",
-      ability:"能力：時を止める",
-      desc:"褒めるときは止めて拍手3回。",
-      quote:"代表： 「（止めて拍手）」",
-      message:"王は見ている"
-    },
-    {
-      id:"ani",
-      name:"デカブサ兄",
-      img:"img/ani.png",
-      ability:"能力：加速装置",
-      desc:"速い。けど反応は薄い。空気だけ重い。",
-      quote:"代表： （なし）",
-      message:"……"
-    }
+    { id:"dekabusa", name:"デカブサ", img:"img/dekabusa.png", ability:"能力：特になし", desc:"何も教えない。褒めない。怒らない。", quote:"代表： 「……」", message:"一字、入力して" },
+    { id:"gori", name:"ゴリさん", img:"img/gori.png", ability:"能力：タイムリープ", desc:"未来が分かる。けど言わない。変えない。", quote:"代表： 「……この未来だった」", message:"……この未来だった" },
+    { id:"tora", name:"トラさん", img:"img/tora.png", ability:"能力：分身", desc:"分身できる。だからって何もしない。", quote:"代表： 「……」", message:"静かに入力しろ" },
+    { id:"king", name:"キング", img:"img/king.png", ability:"能力：時を止める", desc:"褒めるときは止めて拍手3回。", quote:"代表： 「（止めて拍手）」", message:"王は見ている" },
+    { id:"ani", name:"デカブサ兄", img:"img/ani.png", ability:"能力：加速装置", desc:"速い。けど反応は薄い。空気だけ重い。", quote:"代表： （なし）", message:"……" }
   ];
 
-  // ===== ゲーム状態 =====
   let selectedIndex = 0;
   let introIndex = 0;
   let miss = 0;
   let cleared = 0;
   let best = Number(localStorage.getItem("dekabusa_best") || "0");
 
-  // テスト問題（今は固定）
-  const current = {
-    // 正解1文字（ここだけ変えれば判定が動く）
-    answer: "全"
-  };
+  const current = { answer: "全" };
 
-  // ===== UI参照 =====
   const charBar = document.getElementById("charBar");
   const mainCharImg = document.getElementById("mainCharImg");
   const messageEl = document.getElementById("message");
@@ -500,7 +477,6 @@
   const toast = document.getElementById("toast");
   const judgeBtn = document.getElementById("judgeBtn");
 
-  // ===== トースト =====
   let toastTimer = null;
   function showToast(text, bad=false){
     toast.textContent = text;
@@ -510,7 +486,6 @@
     toastTimer = setTimeout(()=>toast.classList.remove("show"), 650);
   }
 
-  // ===== キャラバー =====
   function buildCharBar(){
     charBar.innerHTML = "";
     characters.forEach((c, i)=>{
@@ -529,18 +504,14 @@
     mainCharImg.alt = c.name;
     messageEl.textContent = c.message;
 
-    // active更新
     Array.from(charBar.querySelectorAll("button")).forEach((b, idx)=>{
       b.classList.toggle("active", idx === selectedIndex);
     });
   }
 
-  // ===== 判定（IME対策：最後の1文字だけ採用） =====
   function getOneCharForJudge(){
-    // 全角スペースも除去
     const raw = (inputEl.value || "").replace(/\s|　/g, "");
     if(!raw) return "";
-    // 末尾1文字（変換確定後の最終文字を取りやすい）
     return raw.slice(-1);
   }
 
@@ -551,7 +522,6 @@
   }
 
   function gameOver(){
-    // 最高更新
     if(cleared > best){
       best = cleared;
       localStorage.setItem("dekabusa_best", String(best));
@@ -559,10 +529,8 @@
     setLabels();
     showToast(`ゲームオーバー（最高 ${best}）`, true);
 
-    // ここで「1コマ漫画」を出す案にしやすい（今はアラートで仮）
     setTimeout(()=>{
       alert(`ゲームオーバー\n最高 ${best}\n\n（ここに1コマ漫画を出すの良い）`);
-      // リスタート
       miss = 0;
       cleared = 0;
       inputEl.value = "";
@@ -582,20 +550,15 @@
       showToast("正解");
       inputEl.value = "";
       setLabels();
-      // 本来は次の問題へ（今はテストなので同じ）
     }else{
       miss++;
       showToast("不正解", true);
       setLabels();
-      if(miss >= 3){
-        gameOver();
-      }
+      if(miss >= 3) gameOver();
     }
   }
 
   judgeBtn.addEventListener("click", judge);
-
-  // Enterで判定（iOSの「完了」相当）
   inputEl.addEventListener("keydown", (e)=>{
     if(e.key === "Enter"){
       e.preventDefault();
@@ -638,7 +601,6 @@
 
   overlay.addEventListener("click", (e)=>{ if(e.target === overlay) closeIntro(); });
 
-  // スワイプ
   let sx=0, sy=0, tracking=false;
   const card = document.getElementById("profileCard");
   card.addEventListener("touchstart",(e)=>{
@@ -654,9 +616,7 @@
     }
   },{passive:true});
 
-  // 初期化
   buildCharBar();
-  bestLabel.textContent = `最高 ${best}`;
   setLabels();
   selectChar(0);
 </script>
