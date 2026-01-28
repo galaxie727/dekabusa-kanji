@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>デカブサ漢字クロス（総合・開発用）</title>
 
 <style>
@@ -10,33 +10,28 @@
     --bg:#f2f2f2;
     --panel:#ffffff;
     --text:#111;
-    --muted:#777;
-    --line:#e2e2e2;
-    --btn:#e7e7e7;
-    --btnActive:#9a9a9a;
+    --muted:#9a9a9a;  /* 「上+□」系の薄グレー */
+    --line:#d8d8d8;
+    --btn:#e0e0e0;
+    --btnActive:#9b9b9b;
     --danger:#d33;
   }
-
-  *{ box-sizing:border-box; }
 
   body{
     margin:0;
     background:var(--bg);
     color:var(--text);
     font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
-    -webkit-font-smoothing:antialiased;
     text-align:center;
   }
 
-  /* iOS Safariのアドレスバー問題対策：100dvh + safe-area */
+  /* 画面：フッター固定のため padding-bottom を確保 */
   .screen{
     max-width:420px;
     margin:0 auto;
-    min-height:100dvh;
-    padding:12px 12px calc(12px + env(safe-area-inset-bottom));
-    display:flex;
-    flex-direction:column;
-    gap:12px;
+    min-height:100svh;
+    padding:12px 12px 130px; /* ←フッター分 */
+    box-sizing:border-box;
   }
 
   .topbar{
@@ -44,12 +39,12 @@
     justify-content:space-between;
     align-items:center;
     gap:10px;
+    margin-bottom:10px;
   }
   .title{
     font-size:14px;
-    color:var(--muted);
+    color:#777;
     text-align:left;
-    line-height:1.2;
   }
   .smallbtn{
     border:none;
@@ -57,9 +52,9 @@
     padding:10px 12px;
     border-radius:12px;
     font-size:12px;
-    font-weight:800;
+    font-weight:700;
+    color:#2a7bd6;
   }
-  .smallbtn:active{ filter:brightness(.95); }
 
   .panel{
     background:var(--panel);
@@ -67,180 +62,171 @@
     border-radius:18px;
   }
 
-  /* ===== メイン（1画面に収める） ===== */
-  .main{
-    flex:1;
-    min-height:0;
-    display:flex;
-    flex-direction:column;
-    gap:12px;
-    padding:14px;
-  }
-
-  .statusRow{
+  /* 上のステータス（問題/ミス/最高） */
+  .statusTop{
     display:flex;
     justify-content:space-between;
     align-items:center;
     font-size:13px;
-    color:var(--muted);
+    color:#888;
+    padding:14px 16px 0;
     user-select:none;
   }
 
-  /* 十字レイアウト（初期UI） */
+  /* 十字エリア */
+  .crossPanel{
+    padding:14px 10px 18px;
+  }
+
   .crossArea{
-    flex:1;
-    min-height:0;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    padding:4px 0;
-  }
-
-  .crossGrid{
-    width:100%;
-    display:grid;
-    grid-template-columns: 1fr 1fr 1fr;
-    grid-template-rows: auto auto auto;
-    gap:12px;
-    align-items:center;
-    justify-items:center;
-  }
-
-  /* 1マスのサイズ：画面に応じて自動で小さくなる */
-  .cell{
-    width:clamp(84px, 25vw, 104px);
-    height:clamp(84px, 25vw, 104px);
-    border-radius:18px;
-    border:2px solid #ececec;
-    background:#fff;
-    display:flex;
-    align-items:center;
-    justify-content:center;
     position:relative;
-    user-select:none;
+    width:100%;
+    height:520px; /* ここで全体の収まり決まる */
+    max-height:56svh;
+    margin:0 auto;
   }
 
-  .cell .hint{
+  /* タイル（安/決/配/中） */
+  .tile{
     position:absolute;
-    top:8px;
-    right:10px;
-    font-size:12px;
-    color:#b0b0b0;
-    font-weight:800;
-    letter-spacing:.02em;
-    pointer-events:none;
-  }
-
-  .kanji{
-    font-size:clamp(40px, 10vw, 54px);
+    width:150px;
+    height:150px;
+    border-radius:22px;
+    border:3px solid #e6e6e6;
+    background:#fff;
+    box-sizing:border-box;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:66px;
     font-weight:900;
     line-height:1;
   }
 
-  /* 中央入力：IME対応（複数入力OK→判定で最後の1文字だけ使う） */
-  .center{
+  /* 真ん中の入力マス */
+  .centerBox{
+    position:absolute;
+    width:150px;
+    height:150px;
+    border-radius:22px;
     border:3px dashed #cfcfcf;
     background:#fff;
+    box-sizing:border-box;
+    display:flex;
+    align-items:center;
+    justify-content:center;
   }
-  .center input{
+  .centerBox input{
     width:100%;
     height:100%;
     border:none;
     outline:none;
     background:transparent;
     text-align:center;
-    font-size:clamp(38px, 10vw, 54px);
+    font-size:66px;
     font-weight:900;
-    padding:0 12px;
-    letter-spacing:.02em;
+    padding:0 10px;
+    box-sizing:border-box;
   }
 
-  /* 矢印（上・下・左右） */
-  .arrowV, .arrowH{
-    font-size:28px;
-    font-weight:900;
-    color:#111;
-    opacity:.9;
+  /* タイル内矢印（上+□ と同じ系統） */
+  .arrowInTile{
+    position:absolute;
+    left:50%;
+    top:50%;
+    transform:translate(-50%,-50%);
+    font-size:14px;
+    font-weight:800;
+    color:var(--muted);
     line-height:1;
     user-select:none;
+    pointer-events:none;
   }
 
-  .arrowV{ transform:translateY(-2px); }
-  .arrowH{ transform:translateX(0px); }
+  /* レイアウト配置（十字） */
+  .tile.top    { left:50%; top:0;    transform:translateX(-50%); }
+  .tile.left   { left:0;   top:50%;  transform:translateY(-50%); }
+  .tile.right  { right:0;  top:50%;  transform:translateY(-50%); }
+  .tile.bottom { left:50%; bottom:0; transform:translateX(-50%); }
 
-  /* 入力/判定 row */
-  .actionRow{
+  .centerBox   { left:50%; top:50%; transform:translate(-50%,-50%); }
+
+  /* キャラエリア（下） */
+  .charPanel{
+    margin-top:12px;
+    padding:14px 14px 18px;
+  }
+  .charRow{
     display:flex;
-    gap:12px;
-    justify-content:center;
-    align-items:center;
-    margin-top:2px;
-  }
-
-  .ghostInput{
-    flex:1;
-    max-width:220px;
-    border-radius:16px;
-    border:2px solid #ececec;
-    background:#fff;
-    height:56px;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    color:#b0b0b0;
-    font-weight:900;
-    font-size:18px;
-    user-select:none;
-  }
-
-  .judgeBtn{
-    flex:1;
-    max-width:160px;
-    border:none;
-    background:#dcdcdc;
-    color:#222;
-    border-radius:16px;
-    height:56px;
-    font-size:18px;
-    font-weight:900;
-  }
-  .judgeBtn:active{ filter:brightness(.95); }
-
-  /* キャラ（下に固定感） */
-  .charArea{
-    display:flex;
-    justify-content:flex-end;
+    justify-content:space-between;
     align-items:flex-end;
-    gap:12px;
-    padding:10px 12px;
+    gap:10px;
   }
-
-  .charMsg{
+  .charMessage{
     flex:1;
     text-align:left;
-    font-size:16px;
+    font-size:26px;
     font-weight:900;
-    color:#111;
-    padding-left:2px;
+    letter-spacing:0.01em;
+    padding:6px 0 0;
     line-height:1.1;
   }
-
   .charImgWrap{
-    width:120px;
-    height:120px;
+    width:130px;
+    height:110px;
     display:flex;
     align-items:flex-end;
     justify-content:center;
     overflow:hidden;
   }
   .charImgWrap img{
-    max-width:120px;
-    max-height:120px;
+    max-width:100%;
+    max-height:100%;
     object-fit:contain;
     display:block;
   }
 
-  /* ===== トースト ===== */
+  /* フッター固定（入力ボタン＆判定） */
+  .footer{
+    position:fixed;
+    left:0;
+    right:0;
+    bottom:0;
+    background:rgba(242,242,242,0.92);
+    backdrop-filter: blur(6px);
+    border-top:1px solid #ddd;
+    padding:12px 12px 14px;
+    box-sizing:border-box;
+  }
+  .footerInner{
+    max-width:420px;
+    margin:0 auto;
+    display:flex;
+    gap:10px;
+  }
+  .miniInputBtn{
+    flex:1;
+    border:2px solid #e1e1e1;
+    background:#fff;
+    border-radius:18px;
+    padding:16px 0;
+    font-size:18px;
+    font-weight:900;
+    color:#999;
+  }
+  .judgeBtn{
+    flex:1;
+    border:none;
+    background:#cfcfcf;
+    border-radius:18px;
+    padding:16px 0;
+    font-size:18px;
+    font-weight:900;
+    color:#333;
+  }
+  .judgeBtn:active{ filter:brightness(0.95); }
+
+  /* トースト */
   .toast{
     position:fixed;
     left:50%;
@@ -260,7 +246,7 @@
   .toast.show{ opacity:0.92; }
   .toast.bad{ background:var(--danger); }
 
-  /* ===== キャラ紹介（＝キャラ選択）オーバーレイ ===== */
+  /* ===== キャラ紹介オーバーレイ ===== */
   .overlay{
     position:fixed;
     inset:0;
@@ -269,6 +255,7 @@
     align-items:center;
     justify-content:center;
     padding:16px;
+    box-sizing:border-box;
     z-index:60;
   }
   .overlay.show{ display:flex; }
@@ -289,7 +276,7 @@
   }
   .sheetHeader .h{
     font-size:13px;
-    color:var(--muted);
+    color:#777;
     font-weight:800;
   }
   .closeBtn{
@@ -299,12 +286,13 @@
     border-radius:12px;
     font-size:12px;
     font-weight:900;
+    color:#2a7bd6;
   }
 
   .profileArea{ padding:14px 14px 10px; }
   .profileCard{
     border:1px solid var(--line);
-    border-radius:16px;
+    border-radius:14px;
     padding:12px;
   }
   .profileTop{
@@ -313,9 +301,9 @@
     align-items:center;
   }
   .avatarImg{
-    width:96px;
-    height:96px;
-    border-radius:16px;
+    width:92px;
+    height:92px;
+    border-radius:14px;
     background:#fff;
     border:1px solid var(--line);
     display:flex;
@@ -330,8 +318,8 @@
     display:block;
   }
   .profileText{ text-align:left; flex:1; }
-  .name{ font-size:18px; font-weight:1000; margin-bottom:4px; }
-  .ability{ font-size:13px; color:var(--muted); font-weight:800; margin-bottom:8px; }
+  .name{ font-size:18px; font-weight:900; margin-bottom:4px; }
+  .ability{ font-size:13px; color:#888; margin-bottom:8px; font-weight:800; }
   .desc{ font-size:13px; line-height:1.5; color:#222; }
   .quote{
     margin-top:10px;
@@ -352,27 +340,27 @@
     border:none;
     background:var(--btn);
     padding:12px 0;
-    border-radius:14px;
+    border-radius:12px;
     font-size:12px;
-    font-weight:1000;
+    font-weight:900;
+    color:#2a7bd6;
   }
-
   .pager{
     padding:0 14px 14px;
     font-size:12px;
-    color:var(--muted);
-    font-weight:800;
+    color:#888;
     user-select:none;
+    font-weight:800;
   }
 
   .note{
     padding:12px 14px 14px;
     border-top:1px solid var(--line);
     font-size:12px;
-    color:var(--muted);
+    color:#888;
     line-height:1.5;
     text-align:left;
-    font-weight:800;
+    font-weight:700;
   }
 </style>
 </head>
@@ -382,82 +370,69 @@
 <div class="toast" id="toast"></div>
 
 <div class="screen">
-
   <div class="topbar">
     <div class="title">デカブサ漢字クロス（総合・開発用）</div>
     <button class="smallbtn" id="openIntroBtn">キャラ紹介</button>
   </div>
 
-  <div class="panel main">
-    <div class="statusRow">
+  <div class="panel crossPanel">
+    <div class="statusTop">
       <div id="qLabel">問題 1 / ∞（テスト）</div>
       <div><span id="missLabel">ミス 0 / 3</span>　|　<span id="bestLabel">最高 0</span></div>
     </div>
 
-    <div class="crossArea">
-      <div class="crossGrid" aria-label="十字漢字クロス">
-        <!-- 上 -->
-        <div style="grid-column:2; grid-row:1; display:flex; flex-direction:column; align-items:center; gap:8px;">
-          <div class="cell">
-            <div class="hint">上+□</div>
-            <div class="kanji" id="topKanji">安</div>
-          </div>
-          <div class="arrowV">↓</div>
-        </div>
-
-        <!-- 左 -->
-        <div style="grid-column:1; grid-row:2; display:flex; flex-direction:row; align-items:center; gap:10px;">
-          <div class="cell">
-            <div class="hint">左+□</div>
-            <div class="kanji" id="leftKanji">決</div>
-          </div>
-          <div class="arrowH">→</div>
-        </div>
-
-        <!-- 中央入力 -->
-        <div class="cell center" style="grid-column:2; grid-row:2;">
-          <input id="answerInput" type="text"
-            inputmode="text"
-            autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
-            aria-label="答えを入力">
-        </div>
-
-        <!-- 右 -->
-        <div style="grid-column:3; grid-row:2; display:flex; flex-direction:row; align-items:center; gap:10px;">
-          <div class="arrowH">→</div>
-          <div class="cell">
-            <div class="hint">□+右</div>
-            <div class="kanji" id="rightKanji">配</div>
-          </div>
-        </div>
-
-        <!-- 下 -->
-        <div style="grid-column:2; grid-row:3; display:flex; flex-direction:column; align-items:center; gap:8px;">
-          <div class="arrowV">↓</div>
-          <div class="cell">
-            <div class="hint">□+下</div>
-            <div class="kanji" id="bottomKanji">中</div>
-          </div>
-        </div>
+    <div class="crossArea" aria-label="十字クロス">
+      <!-- 上 -->
+      <div class="tile top">
+        安
+        <span class="arrowInTile">↓</span>
       </div>
-    </div>
 
-    <div class="actionRow">
-      <div class="ghostInput">一字</div>
-      <button class="judgeBtn" id="judgeBtn">判定</button>
-    </div>
+      <!-- 左 -->
+      <div class="tile left">
+        決
+        <span class="arrowInTile">→</span>
+      </div>
 
-    <div class="charArea">
-      <div class="charMsg" id="message">一字、入力して</div>
-      <div class="charImgWrap">
-        <img id="mainCharImg" src="img/dekabusa.png" alt="デカブサ">
+      <!-- 右 -->
+      <div class="tile right">
+        配
+        <span class="arrowInTile">←</span>
+      </div>
+
+      <!-- 下 -->
+      <div class="tile bottom">
+        中
+        <span class="arrowInTile">↑</span>
+      </div>
+
+      <!-- 中央入力 -->
+      <div class="centerBox">
+        <input id="answerInput" type="text" inputmode="text" autocomplete="off"
+          autocorrect="off" autocapitalize="off" spellcheck="false" />
       </div>
     </div>
   </div>
 
+  <div class="panel charPanel">
+    <div class="charRow">
+      <div class="charMessage" id="message">……この未来だった</div>
+      <div class="charImgWrap">
+        <img id="mainCharImg" src="img/gori.png" alt="character">
+      </div>
+    </div>
+  </div>
 </div>
 
-<!-- キャラ紹介（＝キャラ選択） -->
+<!-- フッター固定：入力（フォーカス）＆判定 -->
+<div class="footer">
+  <div class="footerInner">
+    <button class="miniInputBtn" id="focusBtn">一字</button>
+    <button class="judgeBtn" id="judgeBtn">判定</button>
+  </div>
+</div>
+
+<!-- キャラ紹介 -->
 <div class="overlay" id="introOverlay" aria-hidden="true">
   <div class="sheet" role="dialog" aria-modal="true">
     <div class="sheetHeader">
@@ -488,68 +463,82 @@
     <div class="pager" id="pager">1 / 5</div>
 
     <div class="note">
-      追加キャラは <b>表示</b> と <b>文言</b> が変わるだけです。<br>
+      追加キャラは、<b>表示</b>と<b>文言</b>が変わるだけです。<br>
       やること（漢字1字入れて判定）は変わりません。
     </div>
   </div>
 </div>
 
 <script>
-  // ===== キャラ定義（画像パスは img/ ）=====
+  // ===== キャラ定義 =====
   const characters = [
-    { id:"dekabusa", name:"デカブサ", img:"img/dekabusa.png",
-      ability:"能力：特になし", desc:"何も教えない。褒めない。怒らない。", quote:"代表： 「……」", message:"一字、入力して" },
-    { id:"gori", name:"ゴリさん", img:"img/gori.png",
-      ability:"能力：タイムリープ", desc:"未来が分かる。けど言わない。変えない。", quote:"代表： 「……この未来だった」", message:"……この未来だった" },
-    { id:"tora", name:"トラさん", img:"img/tora.png",
-      ability:"能力：分身", desc:"分身できる。だからって何もしない。", quote:"代表： 「……」", message:"静かに入力しろ" },
-    { id:"king", name:"キング", img:"img/king.png",
-      ability:"能力：時を止める", desc:"褒めるときは止めて拍手3回。", quote:"代表： 「（止めて拍手）」", message:"王は見ている" },
-    { id:"ani", name:"デカブサ兄", img:"img/ani.png",
-      ability:"能力：加速装置", desc:"速い。けど反応は薄い。空気だけ重い。", quote:"代表： （なし）", message:"……" }
+    {
+      id:"dekabusa",
+      name:"デカブサ",
+      img:"img/dekabusa.png",
+      ability:"能力：特になし",
+      desc:"何も教えない。褒めない。怒らない。",
+      quote:"代表： 「……」",
+      message:"一字、入力して"
+    },
+    {
+      id:"gori",
+      name:"ゴリさん",
+      img:"img/gori.png",
+      ability:"能力：タイムリープ",
+      desc:"未来が分かる。けど言わない。変えない。",
+      quote:"代表： 「……この未来だった」",
+      message:"……この未来だった"
+    },
+    {
+      id:"tora",
+      name:"トラさん",
+      img:"img/tora.png",
+      ability:"能力：分身",
+      desc:"分身できる。だからって何もしない。",
+      quote:"代表： 「……」",
+      message:"静かに入力しろ"
+    },
+    {
+      id:"king",
+      name:"キング",
+      img:"img/king.png",
+      ability:"能力：時を止める",
+      desc:"褒めるときは止めて拍手3回。",
+      quote:"代表： 「（止めて拍手）」",
+      message:"王は見ている"
+    },
+    {
+      id:"ani",
+      name:"デカブサ兄",
+      img:"img/ani.png",
+      ability:"能力：加速装置",
+      desc:"速い。けど反応は薄い。空気だけ重い。",
+      quote:"代表： （なし）",
+      message:"……"
+    }
   ];
 
-  // ===== テスト問題（今は1問固定）=====
-  // ここを「全」にすると、答えが全の時だけ正解になる
-  // 例：安 + 全 = ??? / 決 + 全 = ??? / 全 + 配 = ??? / 全 + 中 = ???
-  // 問題を増やすなら配列化するのが次の段階
-  const current = {
-    top:"安",
-    left:"決",
-    right:"配",
-    bottom:"中",
-    answer:"全"
-  };
-
-  // ===== 状態 =====
-  let selectedIndex = 0;
+  // ===== ゲーム状態 =====
+  let selectedIndex = 1;     // 初期：ゴリさんにしておく（画像が見える前提）
   let introIndex = 0;
   let miss = 0;
   let cleared = 0;
   let best = Number(localStorage.getItem("dekabusa_best") || "0");
 
-  // キャラ選択の保存
-  const savedCharId = localStorage.getItem("dekabusa_char_id");
-  if(savedCharId){
-    const idx = characters.findIndex(c=>c.id===savedCharId);
-    if(idx >= 0) selectedIndex = idx;
-  }
+  // テスト問題（暫定）
+  const current = { answer: "全" };
 
   // ===== UI参照 =====
-  const toast = document.getElementById("toast");
   const mainCharImg = document.getElementById("mainCharImg");
-  const messageEl = document.getElementById("message");
-  const inputEl = document.getElementById("answerInput");
-
-  const missLabel = document.getElementById("missLabel");
-  const bestLabel = document.getElementById("bestLabel");
-  const qLabel = document.getElementById("qLabel");
-
-  // 問題表示
-  document.getElementById("topKanji").textContent = current.top;
-  document.getElementById("leftKanji").textContent = current.left;
-  document.getElementById("rightKanji").textContent = current.right;
-  document.getElementById("bottomKanji").textContent = current.bottom;
+  const messageEl  = document.getElementById("message");
+  const inputEl    = document.getElementById("answerInput");
+  const missLabel  = document.getElementById("missLabel");
+  const bestLabel  = document.getElementById("bestLabel");
+  const qLabel     = document.getElementById("qLabel");
+  const toast      = document.getElementById("toast");
+  const judgeBtn   = document.getElementById("judgeBtn");
+  const focusBtn   = document.getElementById("focusBtn");
 
   // ===== トースト =====
   let toastTimer = null;
@@ -561,20 +550,20 @@
     toastTimer = setTimeout(()=>toast.classList.remove("show"), 650);
   }
 
+  // ===== ラベル =====
   function setLabels(){
     missLabel.textContent = `ミス ${miss} / 3`;
     bestLabel.textContent = `最高 ${best}`;
     qLabel.textContent = `問題 ${cleared + 1} / ∞（テスト）`;
   }
 
-  // ===== キャラ反映 =====
-  function applyChar(i){
+  // ===== キャラ適用 =====
+  function selectChar(i){
     selectedIndex = i;
     const c = characters[i];
     mainCharImg.src = c.img;
     mainCharImg.alt = c.name;
     messageEl.textContent = c.message;
-    localStorage.setItem("dekabusa_char_id", c.id);
   }
 
   // ===== IME対策：最後の1文字だけ判定に使う =====
@@ -592,14 +581,12 @@
     setLabels();
     showToast(`ゲームオーバー（最高 ${best}）`, true);
 
-    // ここに「1コマ漫画」を出すのが一番ハマる（今は仮でalert）
     setTimeout(()=>{
-      alert(`ゲームオーバー\n最高 ${best}\n\n（ここに1コマ漫画を出すのはアリ）`);
+      alert(`ゲームオーバー\n最高 ${best}\n\n（ここに1コマ漫画を出すの良い）`);
       miss = 0;
       cleared = 0;
       inputEl.value = "";
       setLabels();
-      inputEl.focus();
     }, 250);
   }
 
@@ -607,7 +594,6 @@
     const ch = getOneCharForJudge();
     if(!ch){
       showToast("入力しろ", true);
-      inputEl.focus();
       return;
     }
 
@@ -616,8 +602,6 @@
       showToast("正解");
       inputEl.value = "";
       setLabels();
-      inputEl.focus();
-      // 次の問題へ（今はテストなので同じ）
     }else{
       miss++;
       showToast("不正解", true);
@@ -626,9 +610,14 @@
     }
   }
 
-  document.getElementById("judgeBtn").addEventListener("click", judge);
+  judgeBtn.addEventListener("click", judge);
 
-  // iOS「完了」相当（Enter）で判定
+  // フッターの「一字」＝入力フォーカス
+  focusBtn.addEventListener("click", ()=>{
+    inputEl.focus();
+  });
+
+  // Enter（iOSの完了）で判定
   inputEl.addEventListener("keydown", (e)=>{
     if(e.key === "Enter"){
       e.preventDefault();
@@ -636,19 +625,9 @@
     }
   });
 
-  // ===== キャラ紹介（＝選択） =====
+  // ===== キャラ紹介（右上ボタンのみ） =====
   const overlay = document.getElementById("introOverlay");
   const introAvatarImg = document.getElementById("introAvatarImg");
-
-  function renderIntro(){
-    const c = characters[introIndex];
-    introAvatarImg.src = c.img;
-    document.getElementById("introName").textContent = c.name;
-    document.getElementById("introAbility").textContent = c.ability;
-    document.getElementById("introDesc").textContent = c.desc;
-    document.getElementById("introQuote").textContent = c.quote;
-    document.getElementById("pager").textContent = `${introIndex + 1} / ${characters.length}`;
-  }
 
   function openIntro(){
     introIndex = selectedIndex;
@@ -660,18 +639,18 @@
     overlay.classList.remove("show");
     overlay.setAttribute("aria-hidden","true");
   }
-  function introPrev(){
-    introIndex = (introIndex - 1 + characters.length) % characters.length;
-    renderIntro();
+  function renderIntro(){
+    const c = characters[introIndex];
+    introAvatarImg.src = c.img;
+    document.getElementById("introName").textContent = c.name;
+    document.getElementById("introAbility").textContent = c.ability;
+    document.getElementById("introDesc").textContent = c.desc;
+    document.getElementById("introQuote").textContent = c.quote;
+    document.getElementById("pager").textContent = `${introIndex + 1} / ${characters.length}`;
   }
-  function introNext(){
-    introIndex = (introIndex + 1) % characters.length;
-    renderIntro();
-  }
-  function useThisChar(){
-    applyChar(introIndex);
-    closeIntro();
-  }
+  function introPrev(){ introIndex = (introIndex - 1 + characters.length) % characters.length; renderIntro(); }
+  function introNext(){ introIndex = (introIndex + 1) % characters.length; renderIntro(); }
+  function useThisChar(){ selectChar(introIndex); closeIntro(); }
 
   document.getElementById("openIntroBtn").addEventListener("click", openIntro);
   document.getElementById("closeIntroBtn").addEventListener("click", closeIntro);
@@ -699,7 +678,7 @@
 
   // 初期化
   setLabels();
-  applyChar(selectedIndex);
+  selectChar(selectedIndex);
 </script>
 
 </body>
