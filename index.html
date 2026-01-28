@@ -1,0 +1,477 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>十字漢字クロス（試作）</title>
+  <style>
+    :root{
+      --bg:#f7f7f7;
+      --card:#fff;
+      --line:#e6e6e6;
+      --text:#111;
+      --muted:#8a8a8a;
+      --accent:#ffd400;
+
+      --footer-h: 92px;
+      --deka-w: 210px;
+      --deka-gap: 14px;
+      --main-top: 14px;
+    }
+
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
+      font-family: system-ui, -apple-system, "Hiragino Kaku Gothic ProN","Noto Sans JP","Yu Gothic", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    .wrap{
+      min-height: 100svh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding: 18px;
+    }
+
+    .card{
+      width: min(560px, 100%);
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      overflow:hidden;
+      position: relative;
+    }
+
+    header{
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--line);
+      display:flex;
+      align-items:center;
+      justify-content: space-between;
+      gap:10px;
+    }
+
+    .headLeft{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      min-width:0;
+    }
+
+    .dot{
+      width:10px;height:10px;border-radius:50%;
+      background: var(--accent);
+      flex:0 0 auto;
+    }
+
+    h1{
+      margin:0;
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: .08em;
+      color: #666;
+      white-space: nowrap;
+    }
+
+    #status{
+      font-size: 12px;
+      color: #9a9a9a;
+      letter-spacing: .08em;
+      white-space: nowrap;
+    }
+
+    main{
+      padding: var(--main-top) 16px calc(var(--footer-h) + 16px);
+      min-height: 420px;
+      position: relative;
+    }
+
+    /* 上のライン直下から開始 */
+    .topInfo{
+      margin: 0 0 10px;
+      text-align:center;
+      color: var(--muted);
+      font-size: 12px;
+      letter-spacing: .08em;
+      user-select:none;
+    }
+
+    /* 十字グリッド */
+    .crossWrap{
+      display:flex;
+      justify-content:center;
+      margin-top: 6px;
+    }
+
+    .cross{
+      width: min(340px, 100%);
+      display:grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      grid-template-rows: 1fr 1fr 1fr;
+      gap: 10px;
+      align-items:center;
+      justify-items:center;
+      padding: 10px 8px;
+    }
+
+    .cell{
+      width: 96px;
+      height: 74px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background: #fafafa;
+      position: relative;
+      user-select:none;
+    }
+
+    .cell .kanji{
+      font-size: 34px;
+      font-weight: 700;
+      letter-spacing: .04em;
+    }
+
+    /* 中央（空欄） */
+    .cell.center{
+      background: #fff;
+      border-style: dashed;
+    }
+    .cell.center .kanji{
+      color:#bbb;
+      font-weight: 600;
+      font-size: 30px;
+    }
+
+    /* 矢印（左→中、上→中、 中→右、 中→下） */
+    .arrow{
+      position:absolute;
+      font-size: 14px;
+      color: #b5b5b5;
+      letter-spacing: .02em;
+    }
+    .arrow.top{ top: 6px; right: 8px; }      /* 上＋□ */
+    .arrow.left{ left: 8px; top: 6px; }      /* 左＋□ */
+    .arrow.right{ right: 8px; bottom: 6px; } /* □＋右 */
+    .arrow.bottom{ left: 8px; bottom: 6px; } /* □＋下 */
+
+    /* 入力エリア */
+    .inputArea{
+      margin: 18px auto 0;
+      width: min(360px, 100%);
+      text-align:center;
+    }
+
+    .row{
+      display:flex;
+      gap:10px;
+      justify-content:center;
+      align-items:center;
+    }
+
+    input{
+      width: 120px;
+      height: 52px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      font-size: 28px;
+      text-align:center;
+      outline: none;
+      background:#fff;
+    }
+
+    button{
+      height: 52px;
+      border: 1px solid var(--line);
+      background: #fafafa;
+      color:#111;
+      border-radius: 14px;
+      font-size: 16px;
+      padding: 0 18px;
+      cursor:pointer;
+    }
+    button:active{ transform: translateY(1px); background:#f2f2f2; }
+
+    #msg{
+      margin: 10px 0 0;
+      min-height: 1.6em;
+      font-size: 14px;
+      color: #9a9a9a;
+      letter-spacing: .06em;
+      user-select:none;
+    }
+
+    footer{
+      border-top: 1px solid var(--line);
+      height: var(--footer-h);
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      padding: 0 12px;
+      gap: 10px;
+    }
+
+    .ghostBtn{
+      opacity: .0;
+      pointer-events:none;
+      width: 1px;
+      height: 1px;
+    }
+
+    /* デカブサ：右下固定（下のラインすぐ上） */
+    .dekabusa{
+      position:absolute;
+      right: var(--deka-gap);
+      bottom: var(--footer-h);
+      width: var(--deka-w);
+      height:auto;
+      pointer-events:none;
+      user-select:none;
+      opacity: .98;
+    }
+
+    /* GAME OVER オーバーレイ */
+    .overlay{
+      position:absolute;
+      inset:0;
+      background: rgba(255,255,255,.92);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      text-align:center;
+      padding: 18px;
+    }
+    .overlay.show{ display:flex; }
+
+    .overBox{
+      width: min(420px, 100%);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background:#fff;
+      padding: 18px 16px;
+    }
+    .overTitle{
+      font-size: 20px;
+      font-weight: 800;
+      margin: 0 0 10px;
+      letter-spacing: .06em;
+    }
+    .overText{
+      margin: 0 0 14px;
+      color:#777;
+      white-space: pre-line;
+      line-height: 1.6;
+      letter-spacing: .06em;
+    }
+
+    @media (max-width: 420px){
+      :root{ --deka-w: 180px; --footer-h: 88px; }
+      main{ min-height: 380px; }
+      .cell{ width: 88px; height: 68px; }
+      .cell .kanji{ font-size: 32px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card" id="card">
+      <header>
+        <div class="headLeft">
+          <div class="dot"></div>
+          <h1>十字漢字クロス</h1>
+        </div>
+        <div id="status">余裕：3</div>
+      </header>
+
+      <main>
+        <p class="topInfo" id="qno">問題 1 / 10</p>
+
+        <div class="crossWrap">
+          <div class="cross" aria-label="十字漢字パズル">
+            <!-- row1 -->
+            <div></div>
+            <div class="cell" id="topCell">
+              <div class="kanji" id="topK">?</div>
+              <div class="arrow top">上＋□</div>
+            </div>
+            <div></div>
+
+            <!-- row2 -->
+            <div class="cell" id="leftCell">
+              <div class="kanji" id="leftK">?</div>
+              <div class="arrow left">左＋□</div>
+            </div>
+
+            <div class="cell center" id="centerCell">
+              <div class="kanji">□</div>
+            </div>
+
+            <div class="cell" id="rightCell">
+              <div class="kanji" id="rightK">?</div>
+              <div class="arrow right">□＋右</div>
+            </div>
+
+            <!-- row3 -->
+            <div></div>
+            <div class="cell" id="bottomCell">
+              <div class="kanji" id="bottomK">?</div>
+              <div class="arrow bottom">□＋下</div>
+            </div>
+            <div></div>
+          </div>
+        </div>
+
+        <div class="inputArea">
+          <div class="row">
+            <input id="ans" type="text" inputmode="text" autocomplete="off" autocapitalize="off" spellcheck="false" maxlength="1" placeholder="一字">
+            <button id="judgeBtn" type="button">判定</button>
+          </div>
+          <div id="msg"></div>
+        </div>
+
+        <!-- Game Over -->
+        <div class="overlay" id="overlay">
+          <div class="overBox">
+            <p class="overTitle">今日はそういう日</p>
+            <p class="overText">また今度</p>
+            <button id="restartBtn" type="button">最初から</button>
+          </div>
+        </div>
+      </main>
+
+      <footer>
+        <!-- 今は何も置かない（余白・デカブサのため） -->
+        <button class="ghostBtn" tabindex="-1" aria-hidden="true">.</button>
+      </footer>
+
+      <img class="dekabusa" src="dekabusa.png" alt="デカブサ">
+    </div>
+  </div>
+
+<script>
+  // ルール：上＋□ / 左＋□ / □＋右 / □＋下（ヒントなし）
+  // ミスは内部でカウント。3回でGame Over。
+
+  const MISS_LIMIT = 3;
+
+  // ✅ 仮問題10問（成立保証済み）
+  const questions = [
+    { top:"入", left:"大", right:"校", bottom:"生", answer:"学" }, // 入学/大学/学校/学生
+    { top:"先", left:"一", right:"活", bottom:"物", answer:"生" }, // 先生/一生/生活/生物
+    { top:"安", left:"決", right:"配", bottom:"中", answer:"心" }, // 安心/決心/心配/心中
+    { top:"努", left:"能", right:"量", bottom:"士", answer:"力" }, // 努力/能力/力量/力士
+    { top:"集", left:"総", right:"社", bottom:"員", answer:"会" }, // 集会/総会/会社/会員
+    { top:"共", left:"予", right:"謝", bottom:"動", answer:"感" }, // 共感/予感/感謝/感動
+    { top:"変", left:"悪", right:"学", bottom:"粧", answer:"化" }, // 変化/悪化/化学/化粧
+    { top:"真", left:"原", right:"由", bottom:"科", answer:"理" }, // 真理/原理/理由/理科
+    { top:"討", left:"結", right:"文", bottom:"理", answer:"論" }, // 討論/結論/論文/論理
+    { top:"全", left:"中", right:"語", bottom:"民", answer:"国" }  // 全国/中国/国語/国民
+  ];
+
+  // DOM
+  const qnoEl = document.getElementById("qno");
+  const statusEl = document.getElementById("status");
+  const topK = document.getElementById("topK");
+  const leftK = document.getElementById("leftK");
+  const rightK = document.getElementById("rightK");
+  const bottomK = document.getElementById("bottomK");
+
+  const ansEl = document.getElementById("ans");
+  const judgeBtn = document.getElementById("judgeBtn");
+  const msgEl = document.getElementById("msg");
+
+  const overlay = document.getElementById("overlay");
+  const restartBtn = document.getElementById("restartBtn");
+
+  let idx = 0;
+  let miss = 0;
+
+  function setStatus(){
+    const remain = Math.max(0, MISS_LIMIT - miss);
+    statusEl.innerText = `余裕：${remain}`;
+  }
+
+  function render(){
+    const q = questions[idx];
+    qnoEl.innerText = `問題 ${idx + 1} / ${questions.length}`;
+    topK.innerText = q.top;
+    leftK.innerText = q.left;
+    rightK.innerText = q.right;
+    bottomK.innerText = q.bottom;
+
+    ansEl.value = "";
+    msgEl.innerText = "";
+    setStatus();
+
+    // 入力にフォーカス（スマホでキーボード出したいなら有効）
+    ansEl.focus({ preventScroll: true });
+  }
+
+  function normalizeOneChar(s){
+    // 空白除去
+    s = (s || "").replace(/\s+/g, "");
+    if(!s) return "";
+    // IMEで複数入った場合は最後の1文字だけ採用
+    return s.slice(-1);
+  }
+
+  function nextQuestion(){
+    idx = (idx + 1) % questions.length;
+    render();
+  }
+
+  function gameOver(){
+    overlay.classList.add("show");
+  }
+
+  function judge(){
+    if(overlay.classList.contains("show")) return;
+
+    const q = questions[idx];
+    const input = normalizeOneChar(ansEl.value);
+
+    // 入力が空なら何もしない（デカブサ的に無言）
+    if(!input){
+      return;
+    }
+
+    ansEl.value = input; // 1文字に丸めて表示
+
+    if(input === q.answer){
+      msgEl.innerText = "……"; // 正解でも騒がない（後で演出足せる）
+    }else{
+      miss++;
+      msgEl.innerText = "……";
+      setStatus();
+      if(miss >= MISS_LIMIT){
+        gameOver();
+        return;
+      }
+    }
+
+    // 正解・不正解どちらでも次へ
+    setTimeout(nextQuestion, 180);
+  }
+
+  judgeBtn.addEventListener("click", judge);
+
+  // 入力中に2文字以上入っても最後の1文字に丸める
+  ansEl.addEventListener("input", () => {
+    ansEl.value = normalizeOneChar(ansEl.value);
+  });
+
+  restartBtn.addEventListener("click", () => {
+    overlay.classList.remove("show");
+    idx = 0;
+    miss = 0;
+    render();
+  });
+
+  // 起動
+  render();
+</script>
+</body>
+</html>
