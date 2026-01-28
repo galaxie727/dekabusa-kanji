@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>デカブサ漢字クロス（キャラ紹介テスト）</title>
+<title>デカブサ漢字クロス（総合・開発用）</title>
 
 <style>
   :root{
@@ -14,6 +14,8 @@
     --line:#d8d8d8;
     --btn:#ddd;
     --btnActive:#999;
+    --good:#1a7f37;
+    --bad:#c62828;
   }
 
   body{
@@ -47,6 +49,7 @@
     font-size:14px;
     color:var(--muted);
     text-align:left;
+    line-height:1.2;
   }
   .smallbtn{
     border:none;
@@ -56,21 +59,16 @@
     font-size:12px;
   }
 
-  /* キャラ表示枠（全身が必ず入る） */
-  .character{
-    height:160px;
-    border-radius:14px;
+  /* キャラ画像 */
+  .characterBox{
     background:var(--panel);
     border:1px solid var(--line);
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    overflow:hidden;
-    user-select:none;
+    border-radius:14px;
+    padding:10px;
   }
-  .character img{
+  .characterImg{
     width:100%;
-    height:100%;
+    height:150px;
     object-fit:contain;
     display:block;
   }
@@ -81,39 +79,88 @@
     min-height:1.6em;
     user-select:none;
   }
+  .message.good{ color:var(--good); }
+  .message.bad{ color:var(--bad); }
 
-  /* 問題表示（ダミー） */
+  /* 問題表示 */
   .crossWrap{
     background:var(--panel);
     border:1px solid var(--line);
     border-radius:14px;
-    padding:12px;
-    flex:1; /* 余白を吸う */
+    padding:14px 12px;
+    flex:1;
     display:flex;
     align-items:center;
     justify-content:center;
   }
   .cross{
-    font-size:20px;
-    line-height:1.8;
+    display:flex;
+    flex-direction:column;
+    gap:18px;
+    align-items:center;
+    justify-content:center;
+    width:100%;
   }
 
-  /* 下部キャラ切替バー */
-  .character-bar{
+  /* 縦（上↓□↓下） */
+  .vline{
+    font-size:28px;
+    line-height:1.3;
+    user-select:none;
+  }
+  .vline .arrow{ display:block; margin:8px 0; }
+  .vline .top,.vline .bottom{ display:block; }
+
+  /* 中央入力 □ */
+  .centerInput{
+    width:66px;
+    height:66px;
+    font-size:34px;
+    text-align:center;
+    border:2px dashed var(--line);
+    border-radius:12px;
+    outline:none;
+    background:#fff;
+  }
+  .centerInput:focus{
+    border-color:#aaa;
+  }
+
+  /* 横（左→□→右） */
+  .hline{
+    font-size:28px;
+    user-select:none;
     display:flex;
-    gap:8px;
+    align-items:center;
+    justify-content:center;
+    gap:10px;
   }
-  .character-bar button{
-    flex:1;
-    padding:10px 0;
+  .hline .arrow{ font-size:26px; }
+
+  /* 下部情報＆ボタン */
+  .footer{
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+  }
+  .statusRow{
+    display:flex;
+    justify-content:space-between;
     font-size:12px;
-    border:none;
-    border-radius:10px;
-    background:var(--btn);
+    color:var(--muted);
+    user-select:none;
   }
-  .character-bar button.active{
-    background:var(--btnActive);
+  .judgeBtn{
+    border:none;
+    background:#111;
     color:#fff;
+    padding:14px 0;
+    border-radius:14px;
+    font-size:14px;
+    font-weight:700;
+  }
+  .judgeBtn:disabled{
+    opacity:0.4;
   }
 
   /* ===== キャラ紹介オーバーレイ ===== */
@@ -172,20 +219,18 @@
     align-items:center;
   }
 
-  .avatar{
-    width:88px;
-    height:88px;
+  .avatarWrap{
+    width:96px;
+    height:96px;
     border-radius:14px;
-    background:var(--panel);
     border:1px solid var(--line);
-    overflow:hidden;
+    background:#fff;
     display:flex;
     align-items:center;
     justify-content:center;
-    font-weight:700;
-    user-select:none;
+    overflow:hidden;
   }
-  .avatar img{
+  .avatarImg{
     width:100%;
     height:100%;
     object-fit:contain;
@@ -247,7 +292,6 @@
     user-select:none;
   }
 
-  /* 「課金してもこの程度」を明示（やることは変わらない） */
   .note{
     padding:12px 14px 14px;
     border-top:1px solid var(--line);
@@ -255,6 +299,38 @@
     color:var(--muted);
     line-height:1.5;
     text-align:left;
+  }
+
+  /* ===== ゲームオーバー ===== */
+  .gameoverOverlay .sheetHeader{ border-bottom:none; }
+  .goTitle{
+    font-size:16px;
+    font-weight:800;
+    padding:8px 14px 0;
+    text-align:left;
+  }
+  .goBody{
+    padding:12px 14px 14px;
+    text-align:left;
+    font-size:13px;
+    color:#222;
+    line-height:1.6;
+  }
+  .comicBox{
+    margin-top:12px;
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:12px;
+    background:#fff;
+  }
+  .comicLabel{
+    font-size:12px;
+    color:var(--muted);
+    margin-bottom:6px;
+  }
+  .comicText{
+    font-size:14px;
+    font-weight:700;
   }
 </style>
 </head>
@@ -269,23 +345,39 @@
     <button class="smallbtn" id="openIntroBtn">キャラ紹介</button>
   </div>
 
-  <!-- ここに画像が入る -->
-  <div id="character" class="character"></div>
+  <div class="characterBox">
+    <img id="characterImg" class="characterImg" src="./img/dekabusa.png" alt="character">
+  </div>
 
   <div id="message" class="message">一字、入力して</div>
 
   <div class="crossWrap">
     <div class="cross">
-      安<br>
-      ↓<br>
-      □<br>
-      ↓<br>
-      中<br><br>
-      決 → □ → 配
+      <div class="vline">
+        <span id="topKanji" class="top">安</span>
+        <span class="arrow">↓</span>
+        <input id="centerInput" class="centerInput" inputmode="text" maxlength="1" autocomplete="off" spellcheck="false" />
+        <span class="arrow">↓</span>
+        <span id="bottomKanji" class="bottom">中</span>
+      </div>
+
+      <div class="hline">
+        <span id="leftKanji">決</span>
+        <span class="arrow">→</span>
+        <span style="font-weight:800;">□</span>
+        <span class="arrow">→</span>
+        <span id="rightKanji">配</span>
+      </div>
     </div>
   </div>
 
-  <div class="character-bar" id="charBar"></div>
+  <div class="footer">
+    <div class="statusRow">
+      <div>問題 <span id="qIndex">1</span> / ∞（テスト）</div>
+      <div>ミス <span id="missCount">0</span> / 3　｜　最高 <span id="bestScore">0</span></div>
+    </div>
+    <button class="judgeBtn" id="judgeBtn" disabled>判定</button>
+  </div>
 
 </div>
 
@@ -300,7 +392,9 @@
     <div class="profileArea">
       <div class="profileCard" id="profileCard">
         <div class="profileTop">
-          <div class="avatar" id="introAvatar"></div>
+          <div class="avatarWrap">
+            <img id="introAvatarImg" class="avatarImg" src="./img/dekabusa.png" alt="avatar">
+          </div>
           <div class="profileText">
             <div class="name" id="introName">デカブサ</div>
             <div class="ability" id="introAbility">能力：特になし</div>
@@ -327,183 +421,393 @@
   </div>
 </div>
 
+<!-- ゲームオーバー -->
+<div class="overlay gameoverOverlay" id="gameoverOverlay" aria-hidden="true">
+  <div class="sheet" role="dialog" aria-modal="true">
+    <div class="sheetHeader">
+      <div class="h">結果</div>
+      <button class="closeBtn" id="restartBtn">もう一回</button>
+    </div>
+
+    <div class="goTitle" id="goTitle">ゲームオーバー</div>
+    <div class="goBody">
+      <div>最高： <b id="goBest">0</b> 問クリア</div>
+      <div style="margin-top:6px;color:var(--muted);font-size:12px;">（ミス3回）</div>
+
+      <div class="comicBox" id="comicBox" style="display:none;">
+        <div class="comicLabel">一コマ</div>
+        <div class="comicText" id="comicText">……</div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
-  // 5キャラ（デカブサ＋4人）
-  const characters = [
-    {
-      id: "dekabusa",
-      name: "デカブサ",
-      short: "デ",
-      image: "img/dekabusa.png",
-      ability: "能力：特になし",
-      desc: "何も教えない。褒めない。怒らない。",
-      quote: "代表： 「……」",
-      message: "一字、入力して"
-    },
-    {
-      id: "gori",
-      name: "ゴリさん",
-      short: "ゴ",
-      image: "img/gori.png",
-      ability: "能力：タイムリープ",
-      desc: "未来が分かる。けど言わない。変えない。",
-      quote: "代表： 「……この未来だった」",
-      message: "……この未来だった"
-    },
-    {
-      id: "tora",
-      name: "トラさん",
-      short: "ト",
-      image: "img/tora.png",
-      ability: "能力：分身",
-      desc: "分身できる。だからって何もしない。",
-      quote: "代表： 「……」",
-      message: "静かに考えて"
-    },
-    {
-      id: "king",
-      name: "キング",
-      short: "王",
-      image: "img/king.png",
-      ability: "能力：時を止める",
-      desc: "時を止める。褒めるときは止めて拍手3回。",
-      quote: "代表： 「（止めて拍手）」",
-      message: "王は見ている"
-    },
-    {
-      id: "ani",
-      name: "デカブサ兄",
-      short: "兄",
-      image: "img/ani.png",
-      ability: "能力：加速装置",
-      desc: "速い。けど反応は薄い。空気だけ重い。",
-      quote: "代表： （なし）",
-      message: "……"
+/* =========================
+   キャラ（画像は /img/）
+   ========================= */
+const characters = [
+  {
+    id: "dekabusa",
+    name: "デカブサ",
+    img: "./img/dekabusa.png",
+    ability: "能力：特になし",
+    desc: "何も教えない。褒めない。怒らない。",
+    quote: "代表： 「……」",
+    idle: "一字、入力して",
+    correct: "んっ？（やるな。。）",
+    wrong: "ちがう",
+    gameover: "今のままです"
+  },
+  {
+    id: "gori",
+    name: "ゴリさん",
+    img: "./img/gori.png",
+    ability: "能力：タイムリープ",
+    desc: "未来が分かる。けど言わない。変えない。",
+    quote: "代表： 「……この未来だった」",
+    idle: "静かに、入力して",
+    correct: "……そうなる未来だった",
+    wrong: "外すのは分かってた",
+    gameover: "……この未来だった"
+  },
+  {
+    id: "tora",
+    name: "トラさん",
+    img: "./img/tora.png",
+    ability: "能力：分身",
+    desc: "分身できる。だからって何もしない。",
+    quote: "代表： 「……」",
+    idle: "一字、入力して",
+    correct: "……分身いらなかった",
+    wrong: "ちがう",
+    gameover: "今じゃない"
+  },
+  {
+    id: "king",
+    name: "キング",
+    img: "./img/king.png",
+    ability: "能力：時を止める",
+    desc: "時を止める。褒めるときは止めて拍手3回。",
+    quote: "代表： 「（止めて拍手）」",
+    idle: "入力せよ",
+    correct: "（止めて拍手）",
+    wrong: "否",
+    gameover: "そのままでよい"
+  },
+  {
+    id: "ani",
+    name: "デカブサ兄",
+    img: "./img/ani.png",
+    ability: "能力：加速装置",
+    desc: "速い。けど反応は薄い。空気だけ重い。",
+    quote: "代表： （なし）",
+    idle: "一字、入力して",
+    correct: "……",
+    wrong: "……ちがう",
+    gameover: "……"
+  }
+];
+
+let selectedIndex = 0;
+let introIndex = 0;
+
+/* =========================
+   問題データ（テスト用）
+   正解は center
+   ========================= */
+const questions = [
+  { top:"安", left:"決", right:"配", bottom:"中", center:"排" }, // 安排 / 決排 / 排配 / 排中（※排中は微妙なのでテスト用）
+  { top:"入", left:"立", right:"席", bottom:"口", center:"場" }, // 入場 / 立場 / 場席（微妙）/ 場口（微妙）←テスト用
+  { top:"日", left:"本", right:"語", bottom:"記", center:"記" }  // 日記 / 本記（微妙）/ 記語（微妙）/ 記記（×）←テスト用
+];
+// ※いまはUI動作確認用。問題データ作成に入ったらここをちゃんと作る。
+
+let q = 0;
+let misses = 0;
+let best = 0;
+let locked = false;   // 判定後の“間”の間、入力をロック
+let cleared = 0;      // 正解した問題数（今回のスコア）
+
+/* =========================
+   DOM
+   ========================= */
+const elTop = document.getElementById("topKanji");
+const elLeft = document.getElementById("leftKanji");
+const elRight = document.getElementById("rightKanji");
+const elBottom = document.getElementById("bottomKanji");
+const elInput = document.getElementById("centerInput");
+const elMsg = document.getElementById("message");
+const elJudge = document.getElementById("judgeBtn");
+const elQIndex = document.getElementById("qIndex");
+const elMiss = document.getElementById("missCount");
+const elBest = document.getElementById("bestScore");
+const elCharImg = document.getElementById("characterImg");
+
+/* overlays */
+const introOverlay = document.getElementById("introOverlay");
+const goOverlay = document.getElementById("gameoverOverlay");
+
+/* intro */
+const introAvatarImg = document.getElementById("introAvatarImg");
+const introName = document.getElementById("introName");
+const introAbility = document.getElementById("introAbility");
+const introDesc = document.getElementById("introDesc");
+const introQuote = document.getElementById("introQuote");
+const pager = document.getElementById("pager");
+
+/* gameover */
+const goBest = document.getElementById("goBest");
+const comicBox = document.getElementById("comicBox");
+const comicText = document.getElementById("comicText");
+
+/* =========================
+   一コマ（テキスト版）
+   → 画像にしたいときはここを img パス配列に変えるだけ
+   ========================= */
+const comics = [
+  "『やる気はある。たぶん。』",
+  "『検討はした。』",
+  "『今じゃない。』",
+  "『永久に保留で。』",
+  "『それは案だけでいい。』"
+];
+const COMIC_RATE = 0.40; // 40%で出す（重くならない）
+
+/* =========================
+   共通
+   ========================= */
+function currentChar(){ return characters[selectedIndex]; }
+
+function setMessage(text, tone=""){
+  elMsg.classList.remove("good","bad");
+  if(tone==="good") elMsg.classList.add("good");
+  if(tone==="bad") elMsg.classList.add("bad");
+  elMsg.textContent = text;
+}
+
+function normalizeKanji1(s){
+  // 1文字だけを採用（空白・改行等を除去）
+  if(!s) return "";
+  return s.replace(/\s/g,"").slice(0,1);
+}
+
+/* =========================
+   キャラ反映
+   ========================= */
+function applyCharacter(){
+  const c = currentChar();
+  elCharImg.src = c.img;
+  // 画像が無かった時の保険（altで名前だけでも）
+  elCharImg.onerror = () => {
+    elCharImg.onerror = null;
+    elCharImg.alt = c.name;
+    elCharImg.src = "";
+  };
+  setMessage(c.idle);
+}
+
+/* =========================
+   問題反映
+   ========================= */
+function loadQuestion(){
+  const qq = questions[q % questions.length];
+
+  elTop.textContent = qq.top;
+  elLeft.textContent = qq.left;
+  elRight.textContent = qq.right;
+  elBottom.textContent = qq.bottom;
+
+  elInput.value = "";
+  elInput.focus();
+
+  elQIndex.textContent = (q + 1);
+  elMiss.textContent = misses;
+  elBest.textContent = best;
+
+  setMessage(currentChar().idle);
+
+  elJudge.disabled = true;
+  locked = false;
+}
+
+/* =========================
+   判定
+   ========================= */
+function judge(){
+  if(locked) return;
+
+  const ans = normalizeKanji1(elInput.value);
+  if(!ans) return;
+
+  locked = true;
+  elJudge.disabled = true;
+  elInput.blur();
+
+  const qq = questions[q % questions.length];
+  const ok = (ans === qq.center);
+
+  if(ok){
+    cleared++;
+    best = Math.max(best, cleared);
+    setMessage(currentChar().correct, "good");
+
+    // “間”を作ってから次へ
+    setTimeout(() => {
+      q++;
+      loadQuestion();
+    }, 800);
+
+  }else{
+    misses++;
+    elMiss.textContent = misses;
+    setMessage(currentChar().wrong, "bad");
+
+    if(misses >= 3){
+      setTimeout(() => gameOver(), 700);
+    }else{
+      // 間を作って入力へ戻す
+      setTimeout(() => {
+        locked = false;
+        elInput.value = "";
+        elInput.focus();
+        setMessage(currentChar().idle);
+      }, 800);
     }
-  ];
+  }
+}
 
-  // 現在選択キャラ
-  let selectedIndex = 0;
+/* =========================
+   ゲームオーバー
+   ========================= */
+function gameOver(){
+  setMessage(currentChar().gameover);
+  goBest.textContent = best;
 
-  // 紹介画面の現在ページ
-  let introIndex = 0;
-
-  const charBar = document.getElementById("charBar");
-
-  function safeImgHTML(src, alt){
-    // 画像が読めない時に文字に戻す用（onerror）
-    const escAlt = (alt || "").replace(/"/g, "&quot;");
-    const escSrc = (src || "").replace(/"/g, "&quot;");
-    return `<img src="${escSrc}" alt="${escAlt}" onerror="this.replaceWith(document.createTextNode('${escAlt}'))">`;
+  // 一コマ（確率）
+  if(Math.random() < COMIC_RATE){
+    const line = comics[Math.floor(Math.random() * comics.length)];
+    comicText.textContent = line;
+    comicBox.style.display = "block";
+  }else{
+    comicBox.style.display = "none";
   }
 
-  // 下部キャラバー生成
-  function buildCharBar(){
-    charBar.innerHTML = "";
-    characters.forEach((c, i) => {
-      const btn = document.createElement("button");
-      btn.textContent = c.name;
-      btn.onclick = () => selectChar(i);
-      if(i === selectedIndex) btn.classList.add("active");
-      charBar.appendChild(btn);
-    });
+  goOverlay.classList.add("show");
+  goOverlay.setAttribute("aria-hidden","false");
+}
+
+function restart(){
+  goOverlay.classList.remove("show");
+  goOverlay.setAttribute("aria-hidden","true");
+
+  // リセット
+  q = 0;
+  misses = 0;
+  best = 0;
+  cleared = 0;
+  locked = false;
+
+  loadQuestion();
+}
+
+/* =========================
+   入力連動（1字になったら判定ボタン有効）
+   ========================= */
+elInput.addEventListener("input", () => {
+  if(locked) return;
+  elInput.value = normalizeKanji1(elInput.value);
+  elJudge.disabled = elInput.value.length !== 1;
+});
+
+// Enterで判定
+elInput.addEventListener("keydown", (e) => {
+  if(e.key === "Enter"){
+    e.preventDefault();
+    if(!elJudge.disabled) judge();
   }
+});
 
-  // メイン画面反映
-  function selectChar(i){
-    selectedIndex = i;
-    const c = characters[i];
+document.getElementById("judgeBtn").addEventListener("click", judge);
+document.getElementById("restartBtn").addEventListener("click", restart);
 
-    const charBox = document.getElementById("character");
-    charBox.innerHTML = c.image ? safeImgHTML(c.image, c.name) : c.name;
+/* =========================
+   キャラ紹介オーバーレイ
+   ========================= */
+function renderIntro(){
+  const c = characters[introIndex];
+  introAvatarImg.src = c.img;
+  introAvatarImg.onerror = () => { introAvatarImg.onerror=null; introAvatarImg.src=""; };
+  introName.textContent = c.name;
+  introAbility.textContent = c.ability;
+  introDesc.textContent = c.desc;
+  introQuote.textContent = c.quote;
+  pager.textContent = `${introIndex + 1} / ${characters.length}`;
+}
 
-    document.getElementById("message").textContent = c.message;
+function openIntro(){
+  introIndex = selectedIndex;
+  renderIntro();
+  introOverlay.classList.add("show");
+  introOverlay.setAttribute("aria-hidden","false");
+}
+function closeIntro(){
+  introOverlay.classList.remove("show");
+  introOverlay.setAttribute("aria-hidden","true");
+}
+function introPrev(){
+  introIndex = (introIndex - 1 + characters.length) % characters.length;
+  renderIntro();
+}
+function introNext(){
+  introIndex = (introIndex + 1) % characters.length;
+  renderIntro();
+}
+function useThisChar(){
+  selectedIndex = introIndex;
+  applyCharacter();
+  closeIntro();
+}
 
-    // active更新
-    Array.from(charBar.querySelectorAll("button")).forEach((b, idx) => {
-      b.classList.toggle("active", idx === selectedIndex);
-    });
+document.getElementById("openIntroBtn").addEventListener("click", openIntro);
+document.getElementById("closeIntroBtn").addEventListener("click", closeIntro);
+document.getElementById("prevBtn").addEventListener("click", introPrev);
+document.getElementById("nextBtn").addEventListener("click", introNext);
+document.getElementById("useBtn").addEventListener("click", useThisChar);
+
+// 背景タップで閉じる
+introOverlay.addEventListener("click", (e) => {
+  if(e.target === introOverlay) closeIntro();
+});
+goOverlay.addEventListener("click", (e) => {
+  if(e.target === goOverlay) restart();
+});
+
+// スワイプ（紹介カード）
+let sx=0, sy=0, tracking=false;
+const profileCard = document.getElementById("profileCard");
+profileCard.addEventListener("touchstart", (e) => {
+  const t = e.touches[0];
+  sx = t.clientX; sy = t.clientY;
+  tracking = true;
+},{passive:true});
+profileCard.addEventListener("touchend", (e) => {
+  if(!tracking) return;
+  tracking = false;
+  const t = e.changedTouches[0];
+  const dx = t.clientX - sx;
+  const dy = t.clientY - sy;
+  if(Math.abs(dx) > 45 && Math.abs(dy) < 35){
+    if(dx > 0) introPrev();
+    else introNext();
   }
+},{passive:true});
 
-  // ===== キャラ紹介オーバーレイ =====
-  const overlay = document.getElementById("introOverlay");
-
-  function openIntro(){
-    introIndex = selectedIndex; // 開いた時は現在キャラに合わせる
-    renderIntro();
-    overlay.classList.add("show");
-    overlay.setAttribute("aria-hidden","false");
-  }
-
-  function closeIntro(){
-    overlay.classList.remove("show");
-    overlay.setAttribute("aria-hidden","true");
-  }
-
-  function renderIntro(){
-    const c = characters[introIndex];
-
-    const avatar = document.getElementById("introAvatar");
-    avatar.innerHTML = c.image ? safeImgHTML(c.image, c.name) : c.short;
-
-    document.getElementById("introName").textContent = c.name;
-    document.getElementById("introAbility").textContent = c.ability;
-    document.getElementById("introDesc").textContent = c.desc;
-    document.getElementById("introQuote").textContent = c.quote;
-    document.getElementById("pager").textContent = `${introIndex + 1} / ${characters.length}`;
-  }
-
-  function introPrev(){
-    introIndex = (introIndex - 1 + characters.length) % characters.length;
-    renderIntro();
-  }
-  function introNext(){
-    introIndex = (introIndex + 1) % characters.length;
-    renderIntro();
-  }
-  function useThisChar(){
-    selectChar(introIndex);
-    closeIntro();
-  }
-
-  // ボタン紐付け
-  document.getElementById("openIntroBtn").addEventListener("click", openIntro);
-  document.getElementById("closeIntroBtn").addEventListener("click", closeIntro);
-  document.getElementById("prevBtn").addEventListener("click", introPrev);
-  document.getElementById("nextBtn").addEventListener("click", introNext);
-  document.getElementById("useBtn").addEventListener("click", useThisChar);
-
-  // 背景タップで閉じる
-  overlay.addEventListener("click", (e) => {
-    if(e.target === overlay) closeIntro();
-  });
-
-  // スワイプ対応（紹介カード上で左右スワイプ）
-  let sx = 0, sy = 0, tracking = false;
-  const card = document.getElementById("profileCard");
-
-  card.addEventListener("touchstart", (e) => {
-    const t = e.touches[0];
-    sx = t.clientX; sy = t.clientY;
-    tracking = true;
-  }, {passive:true});
-
-  card.addEventListener("touchend", (e) => {
-    if(!tracking) return;
-    tracking = false;
-    const t = e.changedTouches[0];
-    const dx = t.clientX - sx;
-    const dy = t.clientY - sy;
-
-    if(Math.abs(dx) > 45 && Math.abs(dy) < 35){
-      if(dx > 0) introPrev();
-      else introNext();
-    }
-  }, {passive:true});
-
-  // 初期化
-  buildCharBar();
-  selectChar(0);
+/* =========================
+   初期化
+   ========================= */
+applyCharacter();
+loadQuestion();
 </script>
 </body>
 </html>
