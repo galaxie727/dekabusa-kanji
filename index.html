@@ -210,19 +210,19 @@
     /* 下セル：上向き */
     .arr.up{ top: 10px; left: 50%; transform: translateX(-50%); }
 
-   /* セリフ（占いの「今日はそういう日です」と同系） */
+/* セリフ（デカブサ占いの「今日はそういう日です」側に合わせる） */
 #say{
   margin: 0;
-  font-size: var(--say-size);
-  font-weight: 600;
-  letter-spacing: .08em;
-  color: #9a9a9a;
+  font-size: 16px;        /* ←ここ固定でOK（変数使わない） */
+  font-weight: 500;       /* ←細め */
+  letter-spacing: .02em;  /* ←詰める（占い寄り） */
+  color: #b5b5b5;         /* ←薄いグレー（占い寄り） */
   line-height: 1.2;
+  text-align: center;     /* ←占いと同じ中央 */
 
-  white-space: nowrap;     /* 横1行 */
+  white-space: nowrap;    /* 横1行 */
   overflow: hidden;
   text-overflow: ellipsis;
-  flex: 0 0 auto;
 }
 
     /* 画像：上に詰める */
