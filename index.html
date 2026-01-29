@@ -29,7 +29,7 @@
       --char-w: 220px;
 
       /* セリフ（デカブサ占いの見た目に寄せる） */
-      --say-size: 34px;
+      --say-size: 16px;
     }
 
     *{ box-sizing:border-box; }
@@ -210,19 +210,20 @@
     /* 下セル：上向き */
     .arr.up{ top: 10px; left: 50%; transform: translateX(-50%); }
 
-    /* セリフ（できるだけ横1行） */
-    #say{
-      margin: 0;
-      font-size: var(--say-size);
-      font-weight: 800;
-      letter-spacing: .02em;
-      color: #111;
-      line-height: 1.15;
-      white-space: nowrap;          /* なるべく横一列 */
-      overflow: hidden;
-      text-overflow: ellipsis;
-      flex: 0 0 auto;
-    }
+   /* セリフ（占いの「今日はそういう日です」と同系） */
+#say{
+  margin: 0;
+  font-size: var(--say-size);
+  font-weight: 600;
+  letter-spacing: .08em;
+  color: #9a9a9a;
+  line-height: 1.2;
+
+  white-space: nowrap;     /* 横1行 */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 0 0 auto;
+}
 
     /* 画像：上に詰める */
     .charWrap{
@@ -421,7 +422,7 @@
         --gap: 10px;
         --char-w: 210px;
         --footer-h: 88px;
-        --say-size: 32px;
+        --say-size: 16px;
       }
       input{ height: 62px; }
       button#judgeBtn{ height: 62px; flex-basis: 104px; }
@@ -432,7 +433,7 @@
         --cell-w: 104px;
         --cell-h: 80px;
         --char-w: 200px;
-        --say-size: 30px;
+        --say-size: 15px;
       }
     }
   </style>
